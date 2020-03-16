@@ -141,7 +141,7 @@ class Model(nn.Module):
         return batch_loss
     def get_econde_state(self, batch: Batch) -> (np.array, np.array):
         """
-        Get outputs and attentions scores for a given batch
+        Get the state encode for a given batch
 
         :param batch: batch to generate hypotheses for
         :return: encoder_hidden: encoder hidden, states

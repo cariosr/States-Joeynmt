@@ -418,3 +418,137 @@ def translate(cfg_file, ckpt: str, output_path: str = None) -> None:
             except (KeyboardInterrupt, EOFError):
                 print("\nBye.")
                 break
+
+
+def get_states(cfg_file, ckpt: str, output_path: str = None) -> None:
+    """
+    Interactive state function.  Just to understand how looks like the states
+    Loads model from checkpoint and show states either the stdin input or
+    asks for input to get states interactively.
+    The input has to be pre-processed according to the data that the model
+    was trained on, i.e. tokenized or split into subwords.
+    Translations are printed to stdout.
+
+    :param cfg_file: path to configuration file
+    :param ckpt: path to checkpoint to load
+    :param output_path: path to output file
+    """
+
+    def _load_line_as_data(line):
+        """ Create a dataset from one line via a temporary file. """
+        # write src input to temporary file
+        tmp_name = "tmp"
+        tmp_suffix = ".src"
+        tmp_filename = tmp_name+tmp_suffix
+        with open(tmp_filename, "w") as tmp_file:
+            tmp_file.write("{}\n".format(line))
+
+        test_data = MonoDataset(path=tmp_name, ext=tmp_suffix,
+                                field=src_field)
+
+        # remove temporary file
+        if os.path.exists(tmp_filename):
+            os.remove(tmp_filename)
+
+        return test_data
+
+    logger = make_logger()
+
+    # def _translate_data(test_data):
+    #     """ Translates given dataset, using parameters from outer scope. """
+    #     # pylint: disable=unused-variable
+    #     score, loss, ppl, sources, sources_raw, references, hypotheses, \
+    #     hypotheses_raw, attention_scores = validate_on_data(
+    #         model, data=test_data, batch_size=batch_size,
+    #         batch_type=batch_type, level=level,
+    #         max_output_length=max_output_length, eval_metric="",
+    #         use_cuda=use_cuda, loss_function=None, beam_size=beam_size,
+    #         beam_alpha=beam_alpha, logger=logger)
+    #     return hypotheses
+
+    cfg = load_config(cfg_file)
+
+    # when checkpoint is not specified, take oldest from model dir
+    if ckpt is None:
+        model_dir = cfg["training"]["model_dir"]
+        ckpt = get_latest_checkpoint(model_dir)
+
+    batch_size = cfg["training"].get(
+        "eval_batch_size", cfg["training"].get("batch_size", 1))
+    batch_type = cfg["training"].get(
+        "eval_batch_type", cfg["training"].get("batch_type", "sentence"))
+    use_cuda = cfg["training"].get("use_cuda", False)
+    level = cfg["data"]["level"]
+    max_output_length = cfg["training"].get("max_output_length", None)
+
+    # read vocabs
+    src_vocab_file = cfg["data"].get(
+        "src_vocab", cfg["training"]["model_dir"] + "/src_vocab.txt")
+    trg_vocab_file = cfg["data"].get(
+        "trg_vocab", cfg["training"]["model_dir"] + "/trg_vocab.txt")
+    src_vocab = Vocabulary(file=src_vocab_file)
+    trg_vocab = Vocabulary(file=trg_vocab_file)
+
+    data_cfg = cfg["data"]
+    level = data_cfg["level"]
+    lowercase = data_cfg["lowercase"]
+
+    tok_fun = lambda s: list(s) if level == "char" else s.split()
+
+    src_field = Field(init_token=None, eos_token=EOS_TOKEN,
+                      pad_token=PAD_TOKEN, tokenize=tok_fun,
+                      batch_first=True, lower=lowercase,
+                      unk_token=UNK_TOKEN,
+                      include_lengths=True)
+    src_field.vocab = src_vocab
+
+    # load model state from disk
+    model_checkpoint = load_checkpoint(ckpt, use_cuda=use_cuda)
+
+    # build model and load parameters into it
+    model = build_model(cfg["model"], src_vocab=src_vocab, trg_vocab=trg_vocab)
+    model.load_state_dict(model_checkpoint["model_state"])
+
+    if use_cuda:
+        model.cuda()
+
+    if not sys.stdin.isatty():
+        # input file given
+        test_data = MonoDataset(path=sys.stdin, ext="", field=src_field)
+        states = _states_data(test_data)
+        #hypotheses = _translate_data(test_data)
+
+        if output_path is not None:
+            # write to outputfile if given
+            output_path_set = "{}".format(output_path)
+            with open(output_path_set, mode="w", encoding="utf-8") as out_file:
+                # for hyp in hypotheses:
+                #     out_file.write(hyp + "\n")
+                for hyp in states:
+                    out_file.write(hyp + "\n")
+            logger.info("States saved to: %s.", output_path_set)
+        else:
+            # print to stdout
+            for hyp in states:
+                print(hyp)
+
+    else:
+        # enter interactive mode
+        batch_size = 1
+        batch_type = "sentence"
+        while True:
+            try:
+                src_input = input("\nPlease enter a source sentence "
+                                  "(pre-processed): \n")
+                if not src_input.strip():
+                    break
+
+                # every line has to be made into dataset
+                test_data = _load_line_as_data(line=src_input)
+
+                hypotheses = _translate_data(test_data)
+                print("JoeyNMT: {}".format(hypotheses[0]))
+
+            except (KeyboardInterrupt, EOFError):
+                print("\nBye.")
+                break
