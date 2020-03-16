@@ -163,6 +163,69 @@ def validate_on_data(model: Model, data: Dataset,
         valid_sources_raw, valid_references, valid_hypotheses, \
         decoded_valid, valid_attention_scores
 
+# pylint: disable=too-many-arguments,too-many-locals,no-member
+def _states_data(model: Model, data: Dataset,
+                 logger: Logger,
+                 batch_size: int,
+                 use_cuda: bool,
+                 batch_type: str = "sentence") \
+                     -> (float, float, float, List[str],
+                     List[List[str]], List[str],
+                     List[str], List[List[str]], List[np.array]):
+    """
+    Generate states for the given data.
+    If `loss_function` is not None and references are given,
+    also compute the loss.
+
+    :param model: model module
+    :param logger: logger
+    :param data: dataset for validation
+    :param batch_size: validation batch size
+    :param use_cuda: if True, use CUDA
+    :param batch_type: validation batch type (sentence or token)
+
+    :return:
+        - encoded_states: Econded states.
+    """
+    if batch_size > 1000 and batch_type == "sentence":
+        logger.warning(
+            "WARNING: Are you sure you meant to work on huge batches like "
+            "this? 'batch_size' is > 1000 for sentence-batching. "
+            "Consider decreasing it or switching to"
+            " 'eval_batch_type: token'.")
+    valid_iter = make_data_iter(
+        dataset=data, batch_size=batch_size, batch_type=batch_type,
+        shuffle=False, train=False)
+    pad_index = model.src_vocab.stoi[PAD_TOKEN]
+    # disable dropout
+    model.eval()
+    # don't track gradients during validation
+    with torch.no_grad():
+        all_outputs = []
+        for valid_batch in iter(valid_iter):
+            # run as during training to get validation loss (e.g. xent)
+
+            batch = Batch(valid_batch, pad_index, use_cuda=use_cuda)
+            # sort batch now by src length and keep track of order
+            sort_reverse_index = batch.sort_by_src_lengths()
+
+            #I let this Snippet, in case were nedded...
+            # # run as during training with teacher forcing
+            # if loss_function is not None and batch.trg is not None:
+            #     batch_loss = model.get_loss_for_batch(
+            #         batch, loss_function=loss_function)
+            #     total_loss += batch_loss
+            #     total_ntokens += batch.ntokens
+            #     total_nseqs += batch.nseqs
+
+            # run as during inference to produce translations
+            _, encoder_hidden = model.get_econde_state(batch=batch)
+
+            # sort outputs back to original order
+            all_outputs.extend(encoder_hidden[sort_reverse_index])
+        assert len(all_outputs) == len(data)
+    return all_outputs
+
 
 # pylint: disable-msg=logging-too-many-args
 def test(cfg_file,
@@ -515,7 +578,12 @@ def get_states(cfg_file, ckpt: str, output_path: str = None) -> None:
     if not sys.stdin.isatty():
         # input file given
         test_data = MonoDataset(path=sys.stdin, ext="", field=src_field)
-        states = _states_data(test_data)
+        states = _states_data(model=model, data=test_data,
+                              logger=logger, batch_size=batch_size,
+                              use_cuda=use_cuda,
+                              batch_type="sentence"
+                              )
+
         #hypotheses = _translate_data(test_data)
 
         if output_path is not None:
@@ -546,7 +614,11 @@ def get_states(cfg_file, ckpt: str, output_path: str = None) -> None:
                 # every line has to be made into dataset
                 test_data = _load_line_as_data(line=src_input)
 
-                hypotheses = _translate_data(test_data)
+                hypotheses = _states_data(model=model, data=test_data,
+                              logger=logger, batch_size=batch_size,
+                              use_cuda=use_cuda,
+                              batch_type="sentence"
+                              )
                 print("JoeyNMT: {}".format(hypotheses[0]))
 
             except (KeyboardInterrupt, EOFError):

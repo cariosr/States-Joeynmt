@@ -145,7 +145,6 @@ class Model(nn.Module):
 
         :param batch: batch to generate hypotheses for
         :return: encoder_hidden: encoder hidden, states
-            
         """
         _, encoder_hidden = self.encode(batch.src, batch.src_lengths,
                                         batch.src_mask)
