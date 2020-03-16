@@ -3,12 +3,13 @@ import argparse
 from joeynmt.training import train
 from joeynmt.prediction import test
 from joeynmt.prediction import translate
-
+from joeynmt.prediction import get_states
 
 def main():
     ap = argparse.ArgumentParser("Joey NMT")
 
-    ap.add_argument("mode", choices=["train", "test", "translate"],
+    ap.add_argument("mode",
+                    choices=["train", "test", "translate", "get_states"],
                     help="train a model or test or translate")
 
     ap.add_argument("config_path", type=str,
@@ -34,7 +35,7 @@ def main():
         translate(cfg_file=args.config_path, ckpt=args.ckpt,
                   output_path=args.output_path)
     elif args.mode == "get_states":
-        translate(cfg_file=args.config_path, ckpt=args.ckpt,
+        get_states(cfg_file=args.config_path, ckpt=args.ckpt,
                   output_path=args.output_path)
     else:
         raise ValueError("Unknown mode")

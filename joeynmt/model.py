@@ -148,7 +148,6 @@ class Model(nn.Module):
         """
         _, encoder_hidden = self.encode(batch.src, batch.src_lengths,
                                         batch.src_mask)
-
         return encoder_hidden
 
     def run_batch(self, batch: Batch, max_output_length: int, beam_size: int,

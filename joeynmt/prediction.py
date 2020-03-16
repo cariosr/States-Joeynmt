@@ -187,6 +187,8 @@ def _states_data(model: Model, data: Dataset,
     :return:
         - encoded_states: Econded states.
     """
+    #print('Type: ', Dataset.shape)
+
     if batch_size > 1000 and batch_type == "sentence":
         logger.warning(
             "WARNING: Are you sure you meant to work on huge batches like "
@@ -201,6 +203,7 @@ def _states_data(model: Model, data: Dataset,
     model.eval()
     # don't track gradients during validation
     with torch.no_grad():
+
         all_outputs = []
         for valid_batch in iter(valid_iter):
             # run as during training to get validation loss (e.g. xent)
@@ -219,11 +222,12 @@ def _states_data(model: Model, data: Dataset,
             #     total_nseqs += batch.nseqs
 
             # run as during inference to produce translations
-            _, encoder_hidden = model.get_econde_state(batch=batch)
-
+            encoder_hidden = model.get_econde_state(batch=batch)
             # sort outputs back to original order
             all_outputs.extend(encoder_hidden[sort_reverse_index])
+
         assert len(all_outputs) == len(data)
+        
     return all_outputs
 
 
@@ -496,7 +500,6 @@ def get_states(cfg_file, ckpt: str, output_path: str = None) -> None:
     :param ckpt: path to checkpoint to load
     :param output_path: path to output file
     """
-
     def _load_line_as_data(line):
         """ Create a dataset from one line via a temporary file. """
         # write src input to temporary file

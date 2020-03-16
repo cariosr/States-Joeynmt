@@ -139,6 +139,7 @@ class RecurrentEncoder(Encoder):
         #pylint: disable=no-member
         hidden_concat = torch.cat(
             [fwd_hidden_last, bwd_hidden_last], dim=2).squeeze(0)
+
         # final: batch x directions*hidden
         return output, hidden_concat
 
