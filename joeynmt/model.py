@@ -139,6 +139,18 @@ class Model(nn.Module):
         batch_loss = loss_function(log_probs, batch.trg)
         # return batch loss = sum over all elements in batch that are not pad
         return batch_loss
+    def get_econde_state(self, batch: Batch) -> (np.array, np.array):
+        """
+        Get outputs and attentions scores for a given batch
+
+        :param batch: batch to generate hypotheses for
+        :return: encoder_hidden: encoder hidden, states
+            
+        """
+        _, encoder_hidden = self.encode(batch.src, batch.src_lengths,
+                                        batch.src_mask)
+
+        return encoder_hidden
 
     def run_batch(self, batch: Batch, max_output_length: int, beam_size: int,
                   beam_alpha: float) -> (np.array, np.array):
