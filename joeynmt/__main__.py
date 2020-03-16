@@ -33,6 +33,9 @@ def main():
     elif args.mode == "translate":
         translate(cfg_file=args.config_path, ckpt=args.ckpt,
                   output_path=args.output_path)
+    elif args.mode == "get_states":
+        translate(cfg_file=args.config_path, ckpt=args.ckpt,
+                  output_path=args.output_path)
     else:
         raise ValueError("Unknown mode")
 
