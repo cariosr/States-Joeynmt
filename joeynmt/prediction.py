@@ -227,7 +227,6 @@ def _states_data(model: Model, data: Dataset,
             all_outputs.extend(encoder_hidden[sort_reverse_index])
 
         assert len(all_outputs) == len(data)
-        
     return all_outputs
 
 
@@ -520,18 +519,6 @@ def get_states(cfg_file, ckpt: str, output_path: str = None) -> None:
 
     logger = make_logger()
 
-    # def _translate_data(test_data):
-    #     """ Translates given dataset, using parameters from outer scope. """
-    #     # pylint: disable=unused-variable
-    #     score, loss, ppl, sources, sources_raw, references, hypotheses, \
-    #     hypotheses_raw, attention_scores = validate_on_data(
-    #         model, data=test_data, batch_size=batch_size,
-    #         batch_type=batch_type, level=level,
-    #         max_output_length=max_output_length, eval_metric="",
-    #         use_cuda=use_cuda, loss_function=None, beam_size=beam_size,
-    #         beam_alpha=beam_alpha, logger=logger)
-    #     return hypotheses
-
     cfg = load_config(cfg_file)
 
     # when checkpoint is not specified, take oldest from model dir
@@ -541,11 +528,8 @@ def get_states(cfg_file, ckpt: str, output_path: str = None) -> None:
 
     batch_size = cfg["training"].get(
         "eval_batch_size", cfg["training"].get("batch_size", 1))
-    batch_type = cfg["training"].get(
-        "eval_batch_type", cfg["training"].get("batch_type", "sentence"))
     use_cuda = cfg["training"].get("use_cuda", False)
     level = cfg["data"]["level"]
-    max_output_length = cfg["training"].get("max_output_length", None)
 
     # read vocabs
     src_vocab_file = cfg["data"].get(
@@ -620,7 +604,7 @@ def get_states(cfg_file, ckpt: str, output_path: str = None) -> None:
                 hypotheses = _states_data(model=model, data=test_data,
                               logger=logger, batch_size=batch_size,
                               use_cuda=use_cuda,
-                              batch_type="sentence"
+                              batch_type=batch_type
                               )
                 print("JoeyNMT: {}".format(hypotheses[0]))
 
