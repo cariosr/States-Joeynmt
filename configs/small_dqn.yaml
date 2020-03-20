@@ -74,3 +74,15 @@ model:
         input_feeding: True
         init_hidden: "zero"
         attention: "luong"
+        
+dqn:
+    sample_size: 32			    # Sampling size
+    lr: 0.01                   	# learning rate on QL
+    egreed_max: 0.9             # greedy policy, max values
+    egreed_min: 0.01            # greedy policy, min value
+    gamma_max: 0.9              # reward discount, max value
+    gamma_min: 0.5              # reward discount, min value
+    nu_iter: 100 				# target update frequency, on learn.
+    mem_cap: 2000    		    # Number of buffer experience
+    beam_min: 1				    # Beam minimun value
+    beam_max: 50			    # Beam Maximun value

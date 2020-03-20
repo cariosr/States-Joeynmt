@@ -139,16 +139,39 @@ class Model(nn.Module):
         batch_loss = loss_function(log_probs, batch.trg)
         # return batch loss = sum over all elements in batch that are not pad
         return batch_loss
-    def get_econde_state(self, batch: Batch) -> (np.array, np.array):
-        """
-        Get the state encode for a given batch
+    def get_state(self, batch: Batch) -> Tensor:
 
-        :param batch: batch to generate hypotheses for
-        :return: encoder_hidden: encoder hidden, states
+    # def get_state(self, src: Tensor, trg_input: Tensor, src_mask: Tensor,
+    #               src_lengths: Tensor, trg_mask: Tensor = None) -> (
+    #                   Tensor, Tensor, Tensor, Tensor):
         """
-        _, encoder_hidden = self.encode(batch.src, batch.src_lengths,
-                                        batch.src_mask)
-        return encoder_hidden
+        First encodes the source sentence.
+        Then produces the target one word at a time.
+
+        :param src: source input
+        :param trg_input: target input
+        :param src_mask: source mask
+        :param src_lengths: length of source inputs
+        :param trg_mask: target mask
+        :return: decoder outputs
+        """
+
+
+
+        encoder_output, encoder_hidden = self.encode(src=batch.src,
+                                                    src_length=batch.src_lengths,
+                                                    src_mask=batch.src_mask)
+        unroll_steps = batch.trg_input.size(1)
+
+        outputs, hidden, att_probs, att_vectors = self.decode(encoder_output=encoder_output,
+                    encoder_hidden=encoder_hidden,
+                    src_mask=batch.src_mask, trg_input=batch.trg_input,
+                    unroll_steps=unroll_steps,
+                    trg_mask=batch.trg_mask)
+        return att_vectors
+
+
+
 
     def run_batch(self, batch: Batch, max_output_length: int, beam_size: int,
                   beam_alpha: float) -> (np.array, np.array):

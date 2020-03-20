@@ -74,3 +74,15 @@ model:
         input_feeding: True
         init_hidden: "zero"
         attention: "luong"
+        
+dqn:
+    sample_size: 32
+    lr: 0.01
+    egreed_max: 0.9
+    egreed_min: 0.01
+    gamma_max: 0.9
+    gamma_min: 0.5
+    nu_iter: 100
+    mem_cap: 2000
+    beam_min: 1
+    beam_max: 50
