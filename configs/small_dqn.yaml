@@ -86,3 +86,4 @@ dqn:
     mem_cap: 2000    		    # Number of buffer experience
     beam_min: 1				    # Beam minimun value
     beam_max: 50			    # Beam Maximun value
+    state_type: 'hidden'        # Which kind of state is used? 'hidden' -> hidden_size*2, 'attention' -> hidden_size, 'transformer'  

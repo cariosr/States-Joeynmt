@@ -157,7 +157,7 @@ class Model(nn.Module):
         """
 
 
-
+        #print(' chuu', batch.src, batch.src_lengths)
         encoder_output, encoder_hidden = self.encode(src=batch.src,
                                                     src_length=batch.src_lengths,
                                                     src_mask=batch.src_mask)
@@ -168,7 +168,7 @@ class Model(nn.Module):
                     src_mask=batch.src_mask, trg_input=batch.trg_input,
                     unroll_steps=unroll_steps,
                     trg_mask=batch.trg_mask)
-        return att_vectors
+        return outputs, hidden, att_vectors
 
 
 

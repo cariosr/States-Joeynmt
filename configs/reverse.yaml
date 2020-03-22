@@ -34,7 +34,7 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 1
+    epochs: 2
     validation_freq: 1000
     logging_freq: 100
     eval_metric: "bleu"
@@ -72,5 +72,17 @@ model:
         hidden_dropout: 0.1
         num_layers: 1
         input_feeding: True
-        init_hidden: "zero"
+        init_hidden: "last"
         attention: "luong"
+dqn:
+    sample_size: 32
+    lr: 0.01
+    egreed_max: 0.9
+    egreed_min: 0.01
+    gamma_max: 0.9
+    gamma_min: 0.5
+    nu_iter: 100
+    mem_cap: 2000
+    beam_min: 1
+    beam_max: 50
+    state_type: 'hidden'

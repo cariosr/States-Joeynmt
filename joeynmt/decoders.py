@@ -76,6 +76,9 @@ class RecurrentDecoder(Decoder):
 
         super(RecurrentDecoder, self).__init__()
 
+        self.hidden_all = None
+        self.att_vectors_all = None
+
         self.emb_dropout = torch.nn.Dropout(p=emb_dropout, inplace=False)
         self.type = rnn_type
         self.hidden_dropout = torch.nn.Dropout(p=hidden_dropout, inplace=False)
@@ -352,7 +355,8 @@ class RecurrentDecoder(Decoder):
         # here we store all intermediate attention vectors (used for prediction)
         att_vectors = []
         att_probs = []
-
+        self.hidden_all = []
+        
         batch_size = encoder_output.size(0)
 
         if prev_att_vector is None:
@@ -371,8 +375,12 @@ class RecurrentDecoder(Decoder):
                 hidden=hidden)
             att_vectors.append(prev_att_vector)
             att_probs.append(att_prob)
+            #Falttening the hidden state. And Stacking. 
+            self.hidden_all.append(torch.stack(hidden).reshape([1,1,-1]))
 
         att_vectors = torch.cat(att_vectors, dim=1)
+        self.att_vectors_all = att_vectors
+        
         # att_vectors: batch, unroll_steps, hidden_size
         att_probs = torch.cat(att_probs, dim=1)
         # att_probs: batch, unroll_steps, src_length
