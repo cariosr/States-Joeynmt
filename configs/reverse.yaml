@@ -77,12 +77,12 @@ model:
 dqn:
     epochs: 100
     sample_size: 32
-    lr: 0.01
+    lr: 0.05
     egreed_max: 0.9
     egreed_min: 0.01
     gamma_max: 0.9
     gamma_min: 0.5
-    nu_iter: 100
+    nu_iter: 10
     mem_cap: 2000
     beam_min: 2
     beam_max: 50
