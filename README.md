@@ -7,4 +7,6 @@ Prior work, with extracting the hidden states from LSTM joey model. And using it
 
 Command to try the DQN:
 python3 -m joeynmt dqn_train reverse_model/config.yaml
- 
+
+Command to visualise the loss and total reward on tensorboard
+tensorboard --logdir reverse_model/tensorboard_DQN/ 

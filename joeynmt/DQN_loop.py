@@ -17,7 +17,7 @@ from joeynmt.batch import Batch
 from joeynmt.metrics import bleu, chrf, token_accuracy, sequence_accuracy
 
 import random
-
+from torch.utils.tensorboard import SummaryWriter
 
 def freeze_model(model):
     model.eval()
@@ -81,7 +81,7 @@ class QManager(object):
         #print(cfg.keys())
         if "dqn" not in cfg.keys():
             raise ValueError("dqn data must be specified in config.")
-
+        self.model_dir = cfg["training"]["model_dir"]
         # when checkpoint is not specified, take latest (best) from model dir
         if ckpt is None:
             model_dir = cfg["training"]["model_dir"]
@@ -159,27 +159,31 @@ class QManager(object):
 
         #others not important parameters
         self.index_fin = None
+        path_tensroboard = self.model_dir + "/tensorboard_DQN/"
+        self.tb_writer = SummaryWriter( log_dir=path_tensroboard )
+        self.dev_network_count = 0
 
-        
     def Collecting_experiences(self)-> None:
         for epoch_no in range(self.epochs):
             print("EPOCH %d", epoch_no + 1)
 
-            beam_qdn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
+            #beam_qdn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            # beam_qdn = self.beam_min 
+            beam_qdn = 3
             egreed = 0.2
             self.gamma = self.gamma_max
 
 
             print(' beam_qdn, egreed, gamma: ', beam_qdn, egreed, self.gamma)
-            for data_set_name, data_set in self.data_to_train_dqn.items():
+            #for data_set_name, data_set in self.data_to_train_dqn.items():
+            for _, data_set in self.data_to_train_dqn.items():
+                
                 valid_iter = make_data_iter(
                     dataset=data_set, batch_size=1, batch_type=self.batch_type,
                     shuffle=False, train=False)
-                valid_sources_raw = data_set.src
+                #valid_sources_raw = data_set.src
                 # disable dropout
                 #self.model.eval()
                 # # don't track gradients during validation
@@ -247,7 +251,7 @@ class QManager(object):
                     
                     #Collecting rewards
                     hyp = np.stack(output, axis=1)  # batch, time
-                    r = self.Reward(batch.trg, hyp)  # 1 , time  
+                    r = self.Reward1(batch.trg, hyp, show=False)  # 1 , time  
                     self.store_transition(exp_list, r)
                     
                     #Learning.....
@@ -258,7 +262,7 @@ class QManager(object):
                         self.memory = np.zeros((self.mem_cap, self.state_size * 2 + 2))   
                         self.memory_counter = 0
                         print('-----------------------------------------------------------------------' )
-            
+        self.tb_writer.close()       
 
     def learn(self):
 
@@ -305,6 +309,9 @@ class QManager(object):
             
 
         print(loss.data.numpy())
+
+        self.tb_writer.add_scalar("learn/learn_batch_loss",
+                                              loss.data, self.learn_step_counter)
         #loss.requires_grad = True
         self.optimizer.zero_grad()
         loss.backward()
@@ -319,6 +326,76 @@ class QManager(object):
             r = rew[i]
             transition = np.hstack((state, [a, r], state_))
             self.memory[index, :] = transition
+
+    def Reward1(self, trg, hyp, show = False):
+        """
+        Return an array of rewards, based on the current Score.
+        From a T predicted sequence. Gives a reward per each T steps.
+        Just when the predicted word is on the right place.
+
+        :param trg: target.
+        :param hyp: the predicted sequence.
+        """
+
+      
+
+        # if len(ind1) != 0:
+        #     equal[ind1[0]:, ind2[0]:] = False
+        final_rew = np.zeros(len(hyp[0]))
+
+        for t in np.arange(len(hyp[0])):
+            hyp_sub = hyp[:,:t+1]
+            #print(hyp_sub)
+            decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg ,
+                                                    cut_at_eos=True)
+            decoded_valid_hyp = self.model.trg_vocab.arrays_to_sentences(arrays=hyp_sub ,
+                                                    cut_at_eos=True)
+
+            if show:
+                print('la lista trg-out decodificada: ', decoded_valid_tar)
+                print('la lista hypotesis decodificada: ', decoded_valid_hyp)
+
+            # evaluate with metric on each src, tar, and hypotesis
+            join_char = " " if self.level in ["word", "bpe"] else ""
+            valid_references = [join_char.join(t) for t in decoded_valid_tar]
+            valid_hypotheses = [join_char.join(t) for t in decoded_valid_hyp]
+
+            # post-process
+            if self.level == "bpe":
+                valid_references = [bpe_postprocess(v)
+                                    for v in valid_references]
+                valid_hypotheses = [bpe_postprocess(v) for
+                                    v in valid_hypotheses]
+            # if references are given, evaluate against them
+            if valid_references:
+                assert len(valid_hypotheses) == len(valid_references)
+
+                current_valid_score = 0
+                if self.eval_metric.lower() == 'bleu':
+                    # this version does not use any tokenization
+                    #print(' aaa ')
+                    current_valid_score = bleu(valid_hypotheses, valid_references)
+                elif self.eval_metric.lower() == 'chrf':
+                    current_valid_score = chrf(valid_hypotheses, valid_references)
+                elif self.eval_metric.lower() == 'token_accuracy':
+                    current_valid_score = token_accuracy(
+                        valid_hypotheses, valid_references, level=self.level)
+                elif self.eval_metric.lower() == 'sequence_accuracy':
+                    current_valid_score = sequence_accuracy(
+                        valid_hypotheses, valid_references)
+            else:
+                current_valid_score = -1
+            if show:
+                print(' current_valid_score: ', current_valid_score)
+            final_rew[t] = current_valid_score
+        
+        if show:
+            print('Reward1 is: ' , final_rew)
+            print('Diff Reward1 is: ' , np.diff(final_rew))
+
+        final_rew[1:] = np.diff(final_rew)
+        #print('Shaped Reward1 is: ' , final_rew)
+        return final_rew
 
     def Reward(self, trg, hyp, show = False):
         """
@@ -345,7 +422,7 @@ class QManager(object):
 
         equal = (trg.numpy() == hyp2com)
 
-        equal = np.invert(equal)*np.ones(equal.size)*0.2
+        #equal = np.invert(equal)*np.ones(equal.size)*0.2
         # ind1, ind2 = np.where(equal == False)
 
 
@@ -399,7 +476,9 @@ class QManager(object):
 
         final_rew[: len_temp] = np.multiply(VSa_i
         , current_valid_score)[: len_temp]
-
+        
+        if show:
+            print('Reward is: ' , final_rew)
         return final_rew
 
     def dev_network(self):
@@ -476,10 +555,13 @@ class QManager(object):
                                             cut_at_eos=True)
                 #Final reward?      
                 hyp = stacked_output
-                r = self.Reward(batch.trg, hyp , show = False)
+                r = self.Reward1(batch.trg, hyp , show = False)
                 r_total += sum(r[np.where(r > 0)])
                 print('Reward: ', r)
-                print('r_total: ', r_total )
+            self.tb_writer.add_scalar("dev/dev_reward",
+                                              r_total, self.dev_network_count)
+            self.dev_network_count += 1
+            print('r_total: ', r_total )
             unfreeze_model(self.eval_net)
 
 def dqn_train(cfg_file, ckpt: str, output_path: str = None) -> None:
