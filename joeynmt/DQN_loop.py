@@ -11,32 +11,43 @@ import torch.nn as nn
 from joeynmt.helpers import bpe_postprocess, load_config, make_logger,\
     get_latest_checkpoint, load_checkpoint
 from joeynmt.data import load_data, make_data_iter
-from joeynmt.model import build_model, Model
-from joeynmt.vocabulary import Vocabulary
-from joeynmt.constants import UNK_TOKEN, PAD_TOKEN, EOS_TOKEN, BOS_TOKEN
+from joeynmt.model import build_model
+from joeynmt.constants import PAD_TOKEN, EOS_TOKEN, BOS_TOKEN
 from joeynmt.batch import Batch
 from joeynmt.metrics import bleu, chrf, token_accuracy, sequence_accuracy
-from joeynmt.prediction import validate_on_data
 
 import random
+
+
+def freeze_model(model):
+    model.eval()
+    for params in model.parameters():
+        params.requires_grad = False
+        
+def unfreeze_model(model):
+    model.train()
+    for params in model.parameters():
+        params.requires_grad = True
 
 class Net(nn.Module):
     def __init__(self, N_STATES, N_ACTIONS):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(N_STATES, N_STATES-10)
+        self.fc1 = nn.Linear(N_STATES, 54)
         self.fc1.weight.data.normal_(0, 0.1)   # initialization
 
-        self.fc2 = nn.Linear(N_STATES-10, N_STATES-20)
-        self.fc2.weight.data.normal_(0, 0.1)   # initialization
+        # self.fc2 = nn.Linear(N_STATES-10, N_STATES-20)
+        # self.fc2.weight.data.normal_(0, 0.1)   # initialization
 
-        self.out = nn.Linear(N_STATES-20, N_ACTIONS)
+        self.out = nn.Linear(54, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
         x = self.fc1(x)
         x = F.relu(x)
-        x = self.fc2(x)
-        x = F.relu(x)
+        
+        # x = self.fc2(x)
+        # x = F.relu(x)
+        
         actions_value = self.out(x)
         return actions_value
 
@@ -108,6 +119,7 @@ class QManager(object):
         self.beam_max = cfg["dqn"]["beam_max"]
         self.state_size = cfg["model"]["encoder"]["hidden_size"]*2
         self.actions_size = len(src_vocab)
+        self.gamma = None
 
         self.epochs = cfg["dqn"]["epochs"]
 
@@ -144,109 +156,129 @@ class QManager(object):
         # whether to use beam search for decoding, 0: greedy decoding
         beam_size = 1
         beam_alpha = -1
+
+        #others not important parameters
+        self.index_fin = None
+
         
     def Collecting_experiences(self)-> None:
         for epoch_no in range(self.epochs):
             print("EPOCH %d", epoch_no + 1)
 
-            self.beam_qdn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
-            self.egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
-            self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
+            beam_qdn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
+            #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
+            #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            print(' beam_qdn, egreed, gamma: ', self.beam_qdn, self.egreed, self.gamma)
+            # beam_qdn = self.beam_min 
+            egreed = 0.2
+            self.gamma = self.gamma_max
+
+
+            print(' beam_qdn, egreed, gamma: ', beam_qdn, egreed, self.gamma)
             for data_set_name, data_set in self.data_to_train_dqn.items():
                 valid_iter = make_data_iter(
                     dataset=data_set, batch_size=1, batch_type=self.batch_type,
                     shuffle=False, train=False)
                 valid_sources_raw = data_set.src
                 # disable dropout
-                self.model.eval()
-                # don't track gradients during validation
-                with torch.no_grad():
-                    for valid_batch in iter(valid_iter):
-                        batch = Batch(valid_batch
-                        , self.pad_index, use_cuda=self.use_cuda)
+                #self.model.eval()
+                # # don't track gradients during validation
+                # with torch.no_grad():
+                for valid_batch in iter(valid_iter):
+                    freeze_model(self.model)
+                    batch = Batch(valid_batch
+                    , self.pad_index, use_cuda=self.use_cuda)
+                    
+                    encoder_output, encoder_hidden = self.model.encode(
+                        batch.src, batch.src_lengths,
+                        batch.src_mask)
+                    # if maximum output length is not globally specified, adapt to src len
+                    
+                    if self.max_output_length is None:
+                        self.max_output_length = int(max(batch.src_lengths.cpu().numpy()) * 1.5)
+                                
+                    batch_size = batch.src_mask.size(0)
+                    prev_y = batch.src_mask.new_full(size=[batch_size, 1], fill_value=self.bos_index,
+                                            dtype=torch.long)
+                    output = []
+                    hidden = self.model.decoder._init_hidden(encoder_hidden)
+                    prev_att_vector = None
+                    finished = batch.src_mask.new_zeros((batch_size, 1)).byte()
 
-                        encoder_output, encoder_hidden = self.model.encode(
-                            batch.src, batch.src_lengths,
-                            batch.src_mask)
-                        # if maximum output length is not globally specified, adapt to src len
-                        if self.max_output_length is None:
-                            self.max_output_length = int(max(batch.src_lengths.cpu().numpy()) * 1.5)
-                                    
-                        batch_size = batch.src_mask.size(0)
-                        prev_y = batch.src_mask.new_full(size=[batch_size, 1], fill_value=self.bos_index,
-                                                dtype=torch.long)
-                        output = []
-                        attention_scores = []
-                        hidden = self.model.decoder._init_hidden(encoder_hidden)
-                        prev_att_vector = None
-                        finished = batch.src_mask.new_zeros((batch_size, 1)).byte()
+                    exp_list = []
+                    # pylint: disable=unused-variable
+                    for t in range(self.max_output_length):
 
-                        exp_list = []
-                        # pylint: disable=unused-variable
-                        for t in range(self.max_output_length):
-                            state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                            # decode one single step
-                            logits, hidden, att_probs, prev_att_vector = self.model.decoder(
-                                encoder_output=encoder_output,
-                                encoder_hidden=encoder_hidden,
-                                src_mask=batch.src_mask,
-                                trg_embed=self.model.trg_embed(prev_y),
-                                hidden=hidden,
-                                prev_att_vector=prev_att_vector,
-                                unroll_steps=1)
-                            # logits: batch x time=1 x vocab (logits)
-                            state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                        state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                        # decode one single step
+                        logits, hidden, att_probs, prev_att_vector = self.model.decoder(
+                            encoder_output=encoder_output,
+                            encoder_hidden=encoder_hidden,
+                            src_mask=batch.src_mask,
+                            trg_embed=self.model.trg_embed(prev_y),
+                            hidden=hidden,
+                            prev_att_vector=prev_att_vector,
+                            unroll_steps=1)
+                        # logits: batch x time=1 x vocab (logits)
+                        state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
 
-                            # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
+                        # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
 
-                            if random.uniform(0, 1) < self.egreed_max:
-                                i_ran = random.randint(0,self.beam_qdn-1)
-                                next_word = torch.argsort(logits, descending=True)[:, :, i_ran]
-                            else:
-                                next_word = torch.argmax(logits, dim=-1)  # batch x time=1
+                        if random.uniform(0, 1) < egreed:
+                            i_ran = random.randint(0,beam_qdn-1)
+                            next_word = torch.argsort(logits, descending=True)[:, :, i_ran]
+                        else:
+                            next_word = torch.argmax(logits, dim=-1)  # batch x time=1
 
-                            a = next_word.squeeze(1).detach().cpu().numpy()[0]
+                        a = next_word.squeeze(1).detach().cpu().numpy()[0]
 
-                            output.append(next_word.squeeze(1).detach().cpu().numpy())
-                            tup = (self.memory_counter, state, a, state_)
-                            self.memory_counter += 1
-                        
-                            exp_list.append(tup)
-                            prev_y = next_word
-                            # check if previous symbol was <eos>
-                            is_eos = torch.eq(next_word, self.eos_index)
-                            finished += is_eos
-                            # stop predicting if <eos> reached for all elements in batch
-                            if (finished >= 1).sum() == batch_size:
-                                break
-                        
-                        #Collecting rewards
-                        hyp = np.stack(output, axis=1)  # batch, time
-                        r = self.Reward(batch.trg, hyp )  # 1 , time  
-                        self.store_transition(exp_list, r)
-                        
-                        #Learning.....
-                        if self.memory_counter > self.mem_cap - self.max_output_length:
-                            self.learn()
-                            # initialize memory
-                            self.memory = np.zeros((self.mem_cap, self.state_size * 2 + 2))   
-                            self.memory_counter = 0
-                            print('-----------------------------------------------------------------------' )
-                            #break
+                        output.append(next_word.squeeze(1).detach().cpu().numpy())
+                        tup = (self.memory_counter, state, a, state_)
+                        self.memory_counter += 1
+                    
+                        exp_list.append(tup)
+                        prev_y = next_word
+                        # check if previous symbol was <eos>
+                        is_eos = torch.eq(next_word, self.eos_index)
+                        finished += is_eos
+                        # stop predicting if <eos> reached for all elements in batch
+                        if (finished >= 1).sum() == batch_size:
+                            break
+                    
+                    #Collecting rewards
+                    hyp = np.stack(output, axis=1)  # batch, time
+                    r = self.Reward(batch.trg, hyp)  # 1 , time  
+                    self.store_transition(exp_list, r)
+                    
+                    #Learning.....
+                    if self.memory_counter > self.mem_cap - self.max_output_length:
+                         
+                        self.learn()
+                        # initialize memory
+                        self.memory = np.zeros((self.mem_cap, self.state_size * 2 + 2))   
+                        self.memory_counter = 0
+                        print('-----------------------------------------------------------------------' )
+            
 
     def learn(self):
+
         # target parameter update
+                # target parameter update
         if self.learn_step_counter % self.nu_iter == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
             #testing the preformace of the network
             if self.learn_step_counter != 0:
                 self.dev_network()
+        
         self.learn_step_counter += 1
 
+        long_Batch = self.sample_size*15
         # Sampling the higgest rewards values
-        b_memory = self.memory[np.argsort(-self.memory[:, self.state_size+1])][:self.sample_size]
+        b_memory_big = self.memory[np.argsort(-self.memory[:self.memory_counter, self.state_size+1])][:long_Batch]
+        
+        sample_index = np.random.choice(long_Batch, self.sample_size)
+        b_memory = b_memory_big[sample_index, :]
+
         b_s = torch.FloatTensor(b_memory[:, :self.state_size])
         b_a = torch.LongTensor(b_memory[:, self.state_size:self.state_size+1].astype(int))
         b_r = torch.FloatTensor(b_memory[:, self.state_size+1:self.state_size+2])
@@ -254,22 +286,32 @@ class QManager(object):
 
         print('We choose the following rewads: ', b_r )
 
+        # for param in  self.eval_net.parameters():
+        #     print(param.data)
+
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
         q_target = b_r + self.gamma * q_next.max(1)[0].view(self.sample_size, 1)   # shape (batch, 1)
+        
+        
         loss = self.loss_func(q_eval, q_target)
+        
+        # if (loss.data.numpy() < 10):
+        #     print('Aca?' )
+        #     self.target_net.load_state_dict(self.eval_net.state_dict())
+        #     #testing the preformace of the network
+        #     self.dev_network()
+            
 
-        print(loss.data)
-        loss.requires_grad = True
+        print(loss.data.numpy())
+        #loss.requires_grad = True
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        loss.requires_grad = False
+        #loss.requires_grad = False
 
-        for param in  self.eval_net.parameters():
-            print(param.data)
-
+        
     def store_transition(self, exp_list, rew):
         assert (len(exp_list) == len(rew) )
         for i, ele in enumerate(exp_list):
@@ -303,10 +345,12 @@ class QManager(object):
 
         equal = (trg.numpy() == hyp2com)
 
-        ind1, ind2 = np.where(equal == False)
+        equal = np.invert(equal)*np.ones(equal.size)*0.2
+        # ind1, ind2 = np.where(equal == False)
 
-        if len(ind1) != 0:
-            equal[ind1[0]:, ind2[0]:] = False
+
+        # if len(ind1) != 0:
+        #     equal[ind1[0]:, ind2[0]:] = False
 
         decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg ,
                                                 cut_at_eos=True)
@@ -359,85 +403,84 @@ class QManager(object):
         return final_rew
 
     def dev_network(self):
+        freeze_model(self.eval_net)
         for data_set_name, data_set in self.data_to_dev.items():
             valid_iter = make_data_iter(
                 dataset=data_set, batch_size=1, batch_type=self.batch_type,
                 shuffle=False, train=False)
             valid_sources_raw = data_set.src
 
-            self.eval_net.eval()
+            
             # don't track gradients during validation
-            with torch.no_grad():
-                r_total = 0
+            r_total = 0
 
-                for valid_batch in iter(valid_iter):
-                    # run as during training to get validation loss (e.g. xent)
+            for valid_batch in iter(valid_iter):
+                # run as during training to get validation loss (e.g. xent)
 
-                    batch = Batch(valid_batch, self.pad_index, use_cuda=self.use_cuda)
+                batch = Batch(valid_batch, self.pad_index, use_cuda=self.use_cuda)
 
-                    encoder_output, encoder_hidden = self.model.encode(
-                        batch.src, batch.src_lengths,
-                        batch.src_mask)
+                encoder_output, encoder_hidden = self.model.encode(
+                    batch.src, batch.src_lengths,
+                    batch.src_mask)
 
-                    # if maximum output length is 
-                    # not globally specified, adapt to src len
-                    if self.max_output_length is None:
-                        self.max_output_length = int(max(batch.src_lengths.cpu().numpy()) * 1.5)
+                # if maximum output length is 
+                # not globally specified, adapt to src len
+                if self.max_output_length is None:
+                    self.max_output_length = int(max(batch.src_lengths.cpu().numpy()) * 1.5)
 
-                    batch_size = batch.src_mask.size(0)
-                    prev_y = batch.src_mask.new_full(size=[batch_size, 1], fill_value=self.bos_index,
-                                            dtype=torch.long)
-                    output = []
-                    attention_scores = []
-                    #hidden = None
-                    hidden = self.model.decoder._init_hidden(encoder_hidden)
-                    prev_att_vector = None
-                    finished = batch.src_mask.new_zeros((batch_size, 1)).byte()
+                batch_size = batch.src_mask.size(0)
+                prev_y = batch.src_mask.new_full(size=[batch_size, 1], fill_value=self.bos_index,
+                                        dtype=torch.long)
+                output = []
+                hidden = self.model.decoder._init_hidden(encoder_hidden)
+                prev_att_vector = None
+                finished = batch.src_mask.new_zeros((batch_size, 1)).byte()
 
-                    # pylint: disable=unused-variable
-                    for t in range(self.max_output_length):
-                        state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu()[0]
-                        # decode one single step
-                        logits, hidden, att_probs, prev_att_vector = self.model.decoder(
-                            encoder_output=encoder_output,
-                            encoder_hidden=encoder_hidden,
-                            src_mask=batch.src_mask,
-                            trg_embed=self.model.trg_embed(prev_y),
-                            hidden=hidden,
-                            prev_att_vector=prev_att_vector,
-                            unroll_steps=1)
-                        # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
-                        logits = self.eval_net(state)
-                        logits = logits.reshape([1,1,-1]) 
-                        #print(type(logits), logits.shape, logits)
-                        next_word = torch.argmax(logits, dim=-1)                        
-                        a = next_word.squeeze(1).detach().cpu().numpy()[0]
-                        prev_y = next_word
-                        
-                        output.append(next_word.squeeze(1).detach().cpu().numpy())
-                        prev_y = next_word
-                        
-                        # check if previous symbol was <eos>
-                        is_eos = torch.eq(next_word, self.eos_index)
-                        finished += is_eos
-                        # stop predicting if <eos> reached for all elements in batch
-                        if (finished >= 1).sum() == batch_size:
-                            break
-                    stacked_output = np.stack(output, axis=1)  # batch, time
+                # pylint: disable=unused-variable
+                for t in range(self.max_output_length):
+                    state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu()[0]
+                    # decode one single step
+                    logits, hidden, att_probs, prev_att_vector = self.model.decoder(
+                        encoder_output=encoder_output,
+                        encoder_hidden=encoder_hidden,
+                        src_mask=batch.src_mask,
+                        trg_embed=self.model.trg_embed(prev_y),
+                        hidden=hidden,
+                        prev_att_vector=prev_att_vector,
+                        unroll_steps=1)
+                    # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
+                    logits = self.eval_net(state)
+                    logits = logits.reshape([1,1,-1]) 
+                    #print(type(logits), logits.shape, logits)
+                    next_word = torch.argmax(logits, dim=-1)                        
+                    a = next_word.squeeze(1).detach().cpu().numpy()[0]
+                    prev_y = next_word
+                    
+                    output.append(next_word.squeeze(1).detach().cpu().numpy())
+                    prev_y = next_word
+                    
+                    # check if previous symbol was <eos>
+                    is_eos = torch.eq(next_word, self.eos_index)
+                    finished += is_eos
+                    # stop predicting if <eos> reached for all elements in batch
+                    if (finished >= 1).sum() == batch_size:
+                        break
+                stacked_output = np.stack(output, axis=1)  # batch, time
 
-                    #decode back to symbols
-                    decoded_valid_in = self.model.trg_vocab.arrays_to_sentences(arrays=batch.src,
-                                                cut_at_eos=True)
-                    decoded_valid_out_trg = self.model.trg_vocab.arrays_to_sentences(arrays=batch.trg,
-                                                                        cut_at_eos=True)
-                    decoded_valid_out = self.model.trg_vocab.arrays_to_sentences(arrays=stacked_output,
-                                                cut_at_eos=True)
-                    #Final reward?      
-                    hyp = stacked_output
-                    r = self.Reward(batch.trg, hyp , show = False)
-                    r_total += sum(r[np.where(r > 0)])
-                    print('Reward: ', r)
-                    print('r_total: ', r_total )
+                #decode back to symbols
+                decoded_valid_in = self.model.trg_vocab.arrays_to_sentences(arrays=batch.src,
+                                            cut_at_eos=True)
+                decoded_valid_out_trg = self.model.trg_vocab.arrays_to_sentences(arrays=batch.trg,
+                                                                    cut_at_eos=True)
+                decoded_valid_out = self.model.trg_vocab.arrays_to_sentences(arrays=stacked_output,
+                                            cut_at_eos=True)
+                #Final reward?      
+                hyp = stacked_output
+                r = self.Reward(batch.trg, hyp , show = False)
+                r_total += sum(r[np.where(r > 0)])
+                print('Reward: ', r)
+                print('r_total: ', r_total )
+            unfreeze_model(self.eval_net)
 
 def dqn_train(cfg_file, ckpt: str, output_path: str = None) -> None:
     """
