@@ -5,6 +5,11 @@ Prior work, with extracting the hidden states from LSTM joey model. And using it
 # TODO:
 * Incorporate the final step of the algorith, the update of the seq2seq model.
 
+install:
+git clone 
+cd joeynmt 
+pip3 install .
+
 Command to try the DQN:
 python3 -m joeynmt dqn_train reverse_model/config.yaml
 

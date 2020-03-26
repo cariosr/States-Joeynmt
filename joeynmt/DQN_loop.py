@@ -276,7 +276,7 @@ class QManager(object):
         
         self.learn_step_counter += 1
 
-        long_Batch = self.sample_size*15
+        long_Batch = self.sample_size*3
         # Sampling the higgest rewards values
         b_memory_big = self.memory[np.argsort(-self.memory[:self.memory_counter, self.state_size+1])][:long_Batch]
         
@@ -288,7 +288,7 @@ class QManager(object):
         b_r = torch.FloatTensor(b_memory[:, self.state_size+1:self.state_size+2])
         b_s_ = torch.FloatTensor(b_memory[:, -self.state_size:])
 
-        print('We choose the following rewads: ', b_r )
+        # print('We choose the following rewads: ', b_r )
 
         # for param in  self.eval_net.parameters():
         #     print(param.data)
@@ -308,7 +308,7 @@ class QManager(object):
         #     self.dev_network()
             
 
-        print(loss.data.numpy())
+        print(self.learn_step_counter, loss.data.numpy())
 
         self.tb_writer.add_scalar("learn/learn_batch_loss",
                                               loss.data, self.learn_step_counter)
@@ -557,11 +557,11 @@ class QManager(object):
                 hyp = stacked_output
                 r = self.Reward1(batch.trg, hyp , show = False)
                 r_total += sum(r[np.where(r > 0)])
-                print('Reward: ', r)
+                # print('Reward: ', r)
             self.tb_writer.add_scalar("dev/dev_reward",
                                               r_total, self.dev_network_count)
             self.dev_network_count += 1
-            print('r_total: ', r_total )
+            print('r_total: ',self.dev_network_count, r_total )
             unfreeze_model(self.eval_net)
 
 def dqn_train(cfg_file, ckpt: str, output_path: str = None) -> None:
