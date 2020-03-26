@@ -75,14 +75,15 @@ model:
         init_hidden: "last"
         attention: "luong"
 dqn:
-    sample_size: 32
-    lr: 0.01
+    epochs: 2000
+    sample_size: 800
+    lr: 0.1
     egreed_max: 0.9
     egreed_min: 0.01
     gamma_max: 0.9
     gamma_min: 0.5
     nu_iter: 100
-    mem_cap: 2000
-    beam_min: 1
+    mem_cap: 6000
+    beam_min: 2
     beam_max: 50
     state_type: 'hidden'
