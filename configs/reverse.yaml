@@ -41,7 +41,7 @@ training:
     model_dir: "reverse_model"
     overwrite: True
     shuffle: True
-    use_cuda: True
+    use_cuda: False
     max_output_length: 30
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
@@ -76,13 +76,13 @@ model:
         attention: "luong"
 dqn:
     epochs: 3000
-    sample_size: 800
+    sample_size: 1024
     lr: 0.01
     egreed_max: 0.9
     egreed_min: 0.01
     gamma_max: 0.9
     gamma_min: 0.5
-    nu_iter: 200
+    nu_iter: 100
     mem_cap: 5000
     beam_min: 2
     beam_max: 50

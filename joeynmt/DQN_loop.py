@@ -32,21 +32,21 @@ def unfreeze_model(model):
 class Net(nn.Module):
     def __init__(self, N_STATES, N_ACTIONS):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(N_STATES, 54)
+        self.fc1 = nn.Linear(N_STATES, 80)
         self.fc1.weight.data.normal_(0, 0.1)   # initialization
 
-        # self.fc2 = nn.Linear(N_STATES-10, N_STATES-20)
-        # self.fc2.weight.data.normal_(0, 0.1)   # initialization
+        self.fc2 = nn.Linear(80, 60)
+        self.fc2.weight.data.normal_(0, 0.1)   # initialization
 
-        self.out = nn.Linear(54, N_ACTIONS)
+        self.out = nn.Linear(60, N_ACTIONS)
         self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
         x = self.fc1(x)
         x = F.relu(x)
         
-        # x = self.fc2(x)
-        # x = F.relu(x)
+        x = self.fc2(x)
+        x = F.relu(x)
         
         actions_value = self.out(x)
         return actions_value
@@ -129,7 +129,8 @@ class QManager(object):
 
         self.learn_step_counter = 0
         self.memory_counter = 0
-        self.memory = np.zeros((self.mem_cap, self.state_size * 2 + 2))
+        self.size_memory1 = self.state_size * 2 + 2 + 1
+        self.memory = np.zeros((self.mem_cap, self.size_memory1 ))
         self.optimizer = torch.optim.Adam(self.eval_net.parameters()
                                           , lr=self.lr )
         self.loss_func = nn.MSELoss()
@@ -139,7 +140,9 @@ class QManager(object):
         self.eos_index = trg_vocab.stoi[EOS_TOKEN]
         self.pad_index = trg_vocab.stoi[PAD_TOKEN]
 
-        self.data_to_train_dqn = {"test": test_data}
+        self.data_to_train_dqn = {"train": train_data}
+        
+        #self.data_to_train_dqn = {"test": test_data}
         self.data_to_dev = {"dev": dev_data}
         #self.data_to_train_dqn = {"train": train_data
         #                          ,"dev": dev_data, "test": test_data}
@@ -175,6 +178,13 @@ class QManager(object):
             egreed = 0.2
             self.gamma = self.gamma_max
 
+            self.tb_writer.add_scalar("parameters/beam_qdn",
+                                              beam_qdn, epoch_no)
+            self.tb_writer.add_scalar("parameters/egreed",
+                                              egreed, epoch_no)
+            self.tb_writer.add_scalar("parameters/gamma",
+                                              self.gamma, epoch_no)
+
 
             print(' beam_qdn, egreed, gamma: ', beam_qdn, egreed, self.gamma)
             #for data_set_name, data_set in self.data_to_train_dqn.items():
@@ -186,8 +196,6 @@ class QManager(object):
                 #valid_sources_raw = data_set.src
                 # disable dropout
                 #self.model.eval()
-                # # don't track gradients during validation
-                # with torch.no_grad():
                 for valid_batch in iter(valid_iter):
                     freeze_model(self.model)
                     batch = Batch(valid_batch
@@ -237,14 +245,17 @@ class QManager(object):
                         a = next_word.squeeze(1).detach().cpu().numpy()[0]
 
                         output.append(next_word.squeeze(1).detach().cpu().numpy())
-                        tup = (self.memory_counter, state, a, state_)
+
+                        #tup = (self.memory_counter, state, a, state_)
                         self.memory_counter += 1
                     
-                        exp_list.append(tup)
                         prev_y = next_word
                         # check if previous symbol was <eos>
                         is_eos = torch.eq(next_word, self.eos_index)
                         finished += is_eos
+                        tup = (self.memory_counter, state, a, state_, is_eos[0,0])
+                        exp_list.append(tup)
+                        
                         # stop predicting if <eos> reached for all elements in batch
                         if (finished >= 1).sum() == batch_size:
                             break
@@ -259,26 +270,29 @@ class QManager(object):
                          
                         self.learn()
                         # initialize memory
-                        self.memory = np.zeros((self.mem_cap, self.state_size * 2 + 2))   
-                        self.memory_counter = 0
-                        print('-----------------------------------------------------------------------' )
+                        #self.memory = np.zeros((self.mem_cap, self.state_size * 2 + 2))   
+                        #self.memory_counter = 0
+                        #print('-----------------------------------------------------------------------' )
         self.tb_writer.close()       
 
     def learn(self):
-
+        
         # target parameter update
                 # target parameter update
         if self.learn_step_counter % self.nu_iter == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
             #testing the preformace of the network
-            if self.learn_step_counter != 0:
-                self.dev_network()
-        
+            if self.learn_step_counter == 0:
+                print('As reference, the total Reward without learning is: ' )
+
+            self.dev_network()
+            
         self.learn_step_counter += 1
 
+        
         long_Batch = self.sample_size*3
         # Sampling the higgest rewards values
-        b_memory_big = self.memory[np.argsort(-self.memory[:self.memory_counter, self.state_size+1])][:long_Batch]
+        b_memory_big = self.memory[np.argsort(-self.memory[:-self.max_output_length, self.state_size+1])][:long_Batch]
         
         sample_index = np.random.choice(long_Batch, self.sample_size)
         b_memory = b_memory_big[sample_index, :]
@@ -286,46 +300,54 @@ class QManager(object):
         b_s = torch.FloatTensor(b_memory[:, :self.state_size])
         b_a = torch.LongTensor(b_memory[:, self.state_size:self.state_size+1].astype(int))
         b_r = torch.FloatTensor(b_memory[:, self.state_size+1:self.state_size+2])
-        b_s_ = torch.FloatTensor(b_memory[:, -self.state_size:])
+        b_s_ = torch.FloatTensor(b_memory[:, self.state_size+2: self.state_size+2 + self.state_size])
 
-        # print('We choose the following rewads: ', b_r )
-
-        # for param in  self.eval_net.parameters():
-        #     print(param.data)
-
-        # q_eval w.r.t the action in experience
+        b_is_eos = torch.FloatTensor(b_memory[:, self.size_memory1-1:]).view(self.sample_size, 1)
+        #print(b_a, b_a.size)
+        
+        #Activate the eval_net
+        unfreeze_model(self.eval_net)
+        
+    # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
-        q_target = b_r + self.gamma * q_next.max(1)[0].view(self.sample_size, 1)   # shape (batch, 1)
+        #taking the most likely action.
+        b_a_ = torch.LongTensor(q_next.max(1)[1].view(self.sample_size, 1).long())
+        #b_a_ = q_next.max(1)[0].view(self.sample_size, 1).long()   # shape (batch, 1)
+        q_eval_next = self.eval_net(b_s_).gather(1, b_a_)   # shape (batch, 1)
         
+        #If eos q_target = reward. 
+        q_target = b_r + self.gamma * b_is_eos* q_eval_next.view(self.sample_size, 1)   # shape (batch, 1)
+        #version 0
+        #q_target = b_r + self.gamma * q_next.max(1)[0].view(self.sample_size, 1)   # shape (batch, 1)
         
         loss = self.loss_func(q_eval, q_target)
         
-        # if (loss.data.numpy() < 10):
-        #     print('Aca?' )
-        #     self.target_net.load_state_dict(self.eval_net.state_dict())
-        #     #testing the preformace of the network
-        #     self.dev_network()
-            
 
-        print(self.learn_step_counter, loss.data.numpy())
+        #print(self.learn_step_counter, loss.data.numpy())
 
         self.tb_writer.add_scalar("learn/learn_batch_loss",
                                               loss.data, self.learn_step_counter)
-        #loss.requires_grad = True
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        #loss.requires_grad = False
+
+        #desctivate the eval_net
+        freeze_model(self.eval_net)
+
 
         
     def store_transition(self, exp_list, rew):
         assert (len(exp_list) == len(rew) )
         for i, ele in enumerate(exp_list):
-            index, state, a, state_ = ele
+            index, state, a, state_, is_eos  = ele
+            index = index % self.mem_cap
+            
             r = rew[i]
-            transition = np.hstack((state, [a, r], state_))
+            transition = np.hstack((state, [a, r], state_, np.invert(is_eos)))
             self.memory[index, :] = transition
+
 
     def Reward1(self, trg, hyp, show = False):
         """
@@ -492,6 +514,7 @@ class QManager(object):
             
             # don't track gradients during validation
             r_total = 0
+            roptimal_total = 0
 
             for valid_batch in iter(valid_iter):
                 # run as during training to get validation loss (e.g. xent)
@@ -555,11 +578,17 @@ class QManager(object):
                                             cut_at_eos=True)
                 #Final reward?      
                 hyp = stacked_output
+                #print('Reward \n')
                 r = self.Reward1(batch.trg, hyp , show = False)
+                #print('\n Reward optimal!')
+                roptimal = self.Reward1(batch.trg, batch.trg , show = False)
                 r_total += sum(r[np.where(r > 0)])
+                roptimal_total += sum(roptimal[np.where(roptimal > 0)])
                 # print('Reward: ', r)
             self.tb_writer.add_scalar("dev/dev_reward",
                                               r_total, self.dev_network_count)
+            self.tb_writer.add_scalar("dev/dev_Optimalreward",
+                                              roptimal_total, self.dev_network_count)                                              
             self.dev_network_count += 1
             print('r_total: ',self.dev_network_count, r_total )
             unfreeze_model(self.eval_net)
