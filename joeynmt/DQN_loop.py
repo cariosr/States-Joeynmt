@@ -140,10 +140,11 @@ class QManager(object):
         self.eos_index = trg_vocab.stoi[EOS_TOKEN]
         self.pad_index = trg_vocab.stoi[PAD_TOKEN]
 
-        self.data_to_train_dqn = {"train": train_data}
+        self.data_to_train_dqn = {"dev": dev_data}
         
         #self.data_to_train_dqn = {"test": test_data}
-        self.data_to_dev = {"dev": dev_data}
+        #self.data_to_dev = {"dev": dev_data}
+        self.data_to_dev = {"dev": dev_data, "test": test_data}
         #self.data_to_train_dqn = {"train": train_data
         #                          ,"dev": dev_data, "test": test_data}
         # load model state from disk
@@ -175,7 +176,7 @@ class QManager(object):
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
             beam_qdn = 3
-            egreed = 0.2
+            egreed = 0.0001
             self.gamma = self.gamma_max
 
             self.tb_writer.add_scalar("parameters/beam_qdn",
@@ -267,12 +268,8 @@ class QManager(object):
                     
                     #Learning.....
                     if self.memory_counter > self.mem_cap - self.max_output_length:
-                         
                         self.learn()
-                        # initialize memory
-                        #self.memory = np.zeros((self.mem_cap, self.state_size * 2 + 2))   
-                        #self.memory_counter = 0
-                        #print('-----------------------------------------------------------------------' )
+                        
         self.tb_writer.close()       
 
     def learn(self):
@@ -506,6 +503,7 @@ class QManager(object):
     def dev_network(self):
         freeze_model(self.eval_net)
         for data_set_name, data_set in self.data_to_dev.items():
+            print(data_set_name)
             valid_iter = make_data_iter(
                 dataset=data_set, batch_size=1, batch_type=self.batch_type,
                 shuffle=False, train=False)
