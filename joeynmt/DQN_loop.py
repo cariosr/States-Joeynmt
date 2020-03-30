@@ -127,6 +127,9 @@ class QManager(object):
         self.eval_net = Net(self.state_size, self.actions_size)
         self.target_net = Net(self.state_size, self.actions_size)
 
+        #Following the algorithm
+        self.target_net.load_state_dict(self.eval_net.state_dict())
+
         self.learn_step_counter = 0
         self.memory_counter = 0
         self.size_memory1 = self.state_size * 2 + 2 + 1
@@ -140,11 +143,11 @@ class QManager(object):
         self.eos_index = trg_vocab.stoi[EOS_TOKEN]
         self.pad_index = trg_vocab.stoi[PAD_TOKEN]
 
-        self.data_to_train_dqn = {"dev": dev_data}
+        self.data_to_train_dqn = {"train": train_data}
         
         #self.data_to_train_dqn = {"test": test_data}
         #self.data_to_dev = {"dev": dev_data}
-        self.data_to_dev = {"dev": dev_data, "test": test_data}
+        self.data_to_dev = {"dev": dev_data}
         #self.data_to_train_dqn = {"train": train_data
         #                          ,"dev": dev_data, "test": test_data}
         # load model state from disk
@@ -176,7 +179,7 @@ class QManager(object):
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
             beam_qdn = 3
-            egreed = 0.0001
+            egreed = 0.5
             self.gamma = self.gamma_max
 
             self.tb_writer.add_scalar("parameters/beam_qdn",
@@ -263,7 +266,8 @@ class QManager(object):
                     
                     #Collecting rewards
                     hyp = np.stack(output, axis=1)  # batch, time
-                    r = self.Reward1(batch.trg, hyp, show=False)  # 1 , time  
+                    r = self.Reward(batch.trg, hyp, show=False)  # 1 , time  
+                    # r = self.Reward1(batch.trg, hyp, show=False)  # 1 , time  
                     self.store_transition(exp_list, r)
                     
                     #Learning.....
@@ -577,9 +581,11 @@ class QManager(object):
                 #Final reward?      
                 hyp = stacked_output
                 #print('Reward \n')
-                r = self.Reward1(batch.trg, hyp , show = False)
+                r = self.Reward(batch.trg, hyp , show = False)
+                #r = self.Reward1(batch.trg, hyp , show = False)
                 #print('\n Reward optimal!')
-                roptimal = self.Reward1(batch.trg, batch.trg , show = False)
+                roptimal = self.Reward(batch.trg, batch.trg , show = False)
+                #roptimal = self.Reward1(batch.trg, batch.trg , show = False)
                 r_total += sum(r[np.where(r > 0)])
                 roptimal_total += sum(roptimal[np.where(roptimal > 0)])
                 # print('Reward: ', r)
