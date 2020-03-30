@@ -178,7 +178,7 @@ class QManager(object):
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            beam_qdn = 3
+            beam_qdn = 30
             egreed = 0.5
             self.gamma = self.gamma_max
 
