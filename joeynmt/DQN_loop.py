@@ -167,10 +167,25 @@ class QManager(object):
         #others not important parameters
         self.index_fin = None
         path_tensroboard = self.model_dir + "/tensorboard_DQN/"
-        self.tb_writer = SummaryWriter( log_dir=path_tensroboard )
+        self.tb_writer = SummaryWriter( log_dir=path_tensroboard , purge_step=0)
         self.dev_network_count = 0
 
+        #Reward funtion related:
+        if cfg["dqn"]["reward_type"] == "bleu_diff": 
+            print("You select the reward based on the Bleu score differences")
+            self.Reward = self.Reward_bleu_diff
+        else:
+            print("You select the reward based on the linear Bleu socres, and several punishments")
+            self.Reward = self.Reward_lin
+
+
     def Collecting_experiences(self)-> None:
+        """
+        Main funtion. Compute all the process. 
+
+        :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
+        :param rew: rewards for every experince. Of lenght of the hypotesis        
+        """
         for epoch_no in range(self.epochs):
             print("EPOCH %d", epoch_no + 1)
 
@@ -191,7 +206,6 @@ class QManager(object):
 
 
             print(' beam_qdn, egreed, gamma: ', beam_qdn, egreed, self.gamma)
-            #for data_set_name, data_set in self.data_to_train_dqn.items():
             for _, data_set in self.data_to_train_dqn.items():
                 
                 valid_iter = make_data_iter(
@@ -267,7 +281,6 @@ class QManager(object):
                     #Collecting rewards
                     hyp = np.stack(output, axis=1)  # batch, time
                     r = self.Reward(batch.trg, hyp, show=False)  # 1 , time  
-                    # r = self.Reward1(batch.trg, hyp, show=False)  # 1 , time  
                     self.store_transition(exp_list, r)
                     
                     #Learning.....
@@ -277,6 +290,13 @@ class QManager(object):
         self.tb_writer.close()       
 
     def learn(self):
+        """
+        Select experinces based on the reward. And compute the bellman eqution and the ACC model. 
+        Algoritm 5. from paper https://arxiv.org/pdf/1805.09461v1.pdf like. Without the actor updating. 
+
+        :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
+        :param rew: rewards for every experince. Of lenght of the hypotesis        
+        """
         
         # target parameter update
                 # target parameter update
@@ -284,9 +304,12 @@ class QManager(object):
             self.target_net.load_state_dict(self.eval_net.state_dict())
             #testing the preformace of the network
             if self.learn_step_counter == 0:
-                print('As reference, the total Reward without learning is: ' )
-
-            self.dev_network()
+                print('As referece this first test on dev data. Is maded with the Q networks, initialized randomly : ' )
+            else:
+                print("\n Lets copy the Q-value Net in to Q-target net!. And test the performace on the dev data: ")
+            
+            current_bleu = self.dev_network()
+            print("Current Bleu score is: ", current_bleu)
             
         self.learn_step_counter += 1
 
@@ -309,7 +332,7 @@ class QManager(object):
         #Activate the eval_net
         unfreeze_model(self.eval_net)
         
-    # q_eval w.r.t the action in experience
+        # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
         #taking the most likely action.
@@ -324,9 +347,6 @@ class QManager(object):
         
         loss = self.loss_func(q_eval, q_target)
         
-
-        #print(self.learn_step_counter, loss.data.numpy())
-
         self.tb_writer.add_scalar("learn/learn_batch_loss",
                                               loss.data, self.learn_step_counter)
 
@@ -340,6 +360,12 @@ class QManager(object):
 
         
     def store_transition(self, exp_list, rew):
+        """
+        Fill/ or refill the memory with experiences.
+
+        :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
+        :param rew: rewards for every experince. Of lenght of the hypotesis        
+        """
         assert (len(exp_list) == len(rew) )
         for i, ele in enumerate(exp_list):
             index, state, a, state_, is_eos  = ele
@@ -350,20 +376,17 @@ class QManager(object):
             self.memory[index, :] = transition
 
 
-    def Reward1(self, trg, hyp, show = False):
+    def Reward_bleu_diff(self, trg, hyp, show = False):
         """
-        Return an array of rewards, based on the current Score.
-        From a T predicted sequence. Gives a reward per each T steps.
-        Just when the predicted word is on the right place.
+        To use as self.Reward funtion.
+        Return an array of rewards, based on the differences
+        of current Blue Score. As proposed on paper.
 
         :param trg: target.
         :param hyp: the predicted sequence.
+        :param show: Boolean, display the computation of the rewards
+        :return: current Bleu score
         """
-
-      
-
-        # if len(ind1) != 0:
-        #     equal[ind1[0]:, ind2[0]:] = False
         final_rew = np.zeros(len(hyp[0]))
 
         for t in np.arange(len(hyp[0])):
@@ -420,14 +443,17 @@ class QManager(object):
         #print('Shaped Reward1 is: ' , final_rew)
         return final_rew
 
-    def Reward(self, trg, hyp, show = False):
+    def Reward_lin(self, trg, hyp, show = False):
         """
+        To use as self.Reward funtion. 
         Return an array of rewards, based on the current Score.
         From a T predicted sequence. Gives a reward per each T steps.
         Just when the predicted word is on the right place.
 
         :param trg: target.
         :param hyp: the predicted sequence.
+        :param show: Boolean, display the computation of the rewards
+        :return: current Bleu score
         """
 
         tar_len = trg.shape[1]
@@ -505,9 +531,15 @@ class QManager(object):
         return final_rew
 
     def dev_network(self):
+        """
+        Show how is the current performace over the dev dataset, by mean of the
+        total reward and the belu score.
+        
+        :return: current Bleu score
+        """
         freeze_model(self.eval_net)
         for data_set_name, data_set in self.data_to_dev.items():
-            print(data_set_name)
+            #print(data_set_name)
             valid_iter = make_data_iter(
                 dataset=data_set, batch_size=1, batch_type=self.batch_type,
                 shuffle=False, train=False)
@@ -517,6 +549,8 @@ class QManager(object):
             # don't track gradients during validation
             r_total = 0
             roptimal_total = 0
+            all_outputs = []
+            i_sample = 0
 
             for valid_batch in iter(valid_iter):
                 # run as during training to get validation loss (e.g. xent)
@@ -578,24 +612,71 @@ class QManager(object):
                                                                     cut_at_eos=True)
                 decoded_valid_out = self.model.trg_vocab.arrays_to_sentences(arrays=stacked_output,
                                             cut_at_eos=True)
-                #Final reward?      
+                
+                if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                    print("\n Sample ", i_sample, "-------------Target vs Eval_net prediction:-------------")
+                    print("Target: ", decoded_valid_out_trg)
+                    print("Eval  : ", decoded_valid_out, "\n")
+
                 hyp = stacked_output
-                #print('Reward \n')
+
                 r = self.Reward(batch.trg, hyp , show = False)
                 #r = self.Reward1(batch.trg, hyp , show = False)
-                #print('\n Reward optimal!')
-                roptimal = self.Reward(batch.trg, batch.trg , show = False)
-                #roptimal = self.Reward1(batch.trg, batch.trg , show = False)
                 r_total += sum(r[np.where(r > 0)])
-                roptimal_total += sum(roptimal[np.where(roptimal > 0)])
-                # print('Reward: ', r)
-            self.tb_writer.add_scalar("dev/dev_reward",
-                                              r_total, self.dev_network_count)
-            self.tb_writer.add_scalar("dev/dev_Optimalreward",
-                                              roptimal_total, self.dev_network_count)                                              
+                if i_sample ==0:
+                    roptimal = self.Reward(batch.trg, batch.trg , show = False)
+                    roptimal_total += sum(roptimal[np.where(roptimal > 0)])
+                
+                all_outputs.extend(stacked_output)
+                i_sample += 1
+
+            assert len(all_outputs) == len(data_set)
+
+            # decode back to symbols
+            decoded_valid = self.model.trg_vocab.arrays_to_sentences(arrays=all_outputs,
+                                                                cut_at_eos=True)
+
+            # evaluate with metric on full dataset
+            join_char = " " if self.level in ["word", "bpe"] else ""
+            valid_sources = [join_char.join(s) for s in data_set.src]
+            valid_references = [join_char.join(t) for t in data_set.trg]
+            valid_hypotheses = [join_char.join(t) for t in decoded_valid]
+
+            # post-process
+            if self.level == "bpe":
+                valid_sources = [bpe_postprocess(s) for s in valid_sources]
+                valid_references = [bpe_postprocess(v)
+                                    for v in valid_references]
+                valid_hypotheses = [bpe_postprocess(v) for
+                                    v in valid_hypotheses]
+
+            # if references are given, evaluate against them
+            if valid_references:
+                assert len(valid_hypotheses) == len(valid_references)
+
+                current_valid_score = 0
+                if self.eval_metric.lower() == 'bleu':
+                    # this version does not use any tokenization
+                    current_valid_score = bleu(valid_hypotheses, valid_references)
+                elif self.eval_metric.lower() == 'chrf':
+                    current_valid_score = chrf(valid_hypotheses, valid_references)
+                elif self.eval_metric.lower() == 'token_accuracy':
+                    current_valid_score = token_accuracy(
+                        valid_hypotheses, valid_references, level=self.level)
+                elif self.eval_metric.lower() == 'sequence_accuracy':
+                    current_valid_score = sequence_accuracy(
+                        valid_hypotheses, valid_references)
+            else:
+                current_valid_score = -1
+
             self.dev_network_count += 1
-            print('r_total: ',self.dev_network_count, r_total )
+            self.tb_writer.add_scalar("dev/dev_reward",
+                                            r_total, self.dev_network_count)
+            print(self.dev_network_count ,' r_total and score: ', r_total , current_valid_score)
+
+            
             unfreeze_model(self.eval_net)
+        return current_valid_score
 
 def dqn_train(cfg_file, ckpt: str, output_path: str = None) -> None:
     """
