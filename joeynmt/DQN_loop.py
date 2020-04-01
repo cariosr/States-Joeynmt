@@ -189,23 +189,26 @@ class QManager(object):
         for epoch_no in range(self.epochs):
             print("EPOCH %d", epoch_no + 1)
 
-            #beam_qdn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
+            #beam_dqn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            beam_qdn = 30
+            beam_dqn = 30
             egreed = 0.5
             self.gamma = self.gamma_max
 
-            self.tb_writer.add_scalar("parameters/beam_qdn",
-                                              beam_qdn, epoch_no)
+            self.tb_writer.add_scalar("parameters/beam_dqn",
+                                              beam_dqn, epoch_no)
             self.tb_writer.add_scalar("parameters/egreed",
                                               egreed, epoch_no)
             self.tb_writer.add_scalar("parameters/gamma",
                                               self.gamma, epoch_no)
+            if beam_dqn > self.actions_size:
+                print("The beam_dqn cannot exceed the action size!")
+                print("then the beam_dqn = action size")
+                beam_dqn = self.actions_size
 
-
-            print(' beam_qdn, egreed, gamma: ', beam_qdn, egreed, self.gamma)
+            print(' beam_dqn, egreed, gamma: ', beam_dqn, egreed, self.gamma)
             for _, data_set in self.data_to_train_dqn.items():
                 
                 valid_iter = make_data_iter(
@@ -255,7 +258,7 @@ class QManager(object):
                         # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
 
                         if random.uniform(0, 1) < egreed:
-                            i_ran = random.randint(0,beam_qdn-1)
+                            i_ran = random.randint(0,beam_dqn-1)
                             next_word = torch.argsort(logits, descending=True)[:, :, i_ran]
                         else:
                             next_word = torch.argmax(logits, dim=-1)  # batch x time=1
