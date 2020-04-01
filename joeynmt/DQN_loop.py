@@ -103,6 +103,8 @@ class QManager(object):
         self.eval_metric = cfg["training"]["eval_metric"]
         self.max_output_length = cfg["training"].get("max_output_length", None)
 
+        
+
         # load the data
         train_data, dev_data, test_data, src_vocab, trg_vocab = load_data(
             data_cfg=cfg["data"])
@@ -117,10 +119,19 @@ class QManager(object):
         self.mem_cap = cfg["dqn"]["mem_cap"]
         self.beam_min = cfg["dqn"]["beam_min"]
         self.beam_max = cfg["dqn"]["beam_max"]
-        self.state_size = cfg["model"]["encoder"]["hidden_size"]*2
+        self.state_type = cfg["dqn"]["state_type"]
+        
+        if self.state_type == 'hidden':
+            self.state_size = cfg["model"]["encoder"]["hidden_size"]*2
+        else:
+            self.state_size = cfg["model"]["encoder"]["hidden_size"]
+
         self.actions_size = len(src_vocab)
         self.gamma = None
-
+        
+        print("Sample size: ", self.sample_size )
+        print("State size: ", self.state_size)
+        print("Action size: ", self.actions_size)
         self.epochs = cfg["dqn"]["epochs"]
 
         # Inii the Qnet and Qnet2
@@ -171,20 +182,23 @@ class QManager(object):
         self.dev_network_count = 0
 
         #Reward funtion related:
-        if cfg["dqn"]["reward_type"] == "bleu_diff": 
+        if cfg["dqn"]["reward_type"] == "bleu_diff" : 
             print("You select the reward based on the Bleu score differences")
             self.Reward = self.Reward_bleu_diff
-        else:
+        elif cfg["dqn"]["reward_type"] == "bleu_lin" : 
             print("You select the reward based on the linear Bleu socres, and several punishments")
             self.Reward = self.Reward_lin
+        else:
+            print("You select the reward based on the final score on the last state ")
+            self.Reward = self.Reward_bleu_fin
 
 
     def Collecting_experiences(self)-> None:
         """
-        Main funtion. Compute all the process. 
+        Main funtion. Compute all the process.
 
         :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
-        :param rew: rewards for every experince. Of lenght of the hypotesis        
+        :param rew: rewards for every experince. Of lenght of the hypotesis
         """
         for epoch_no in range(self.epochs):
             print("EPOCH %d", epoch_no + 1)
@@ -193,9 +207,10 @@ class QManager(object):
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            beam_dqn = 30
+            beam_dqn = 1
             egreed = 0.5
-            self.gamma = self.gamma_max
+            #self.gamma = self.gamma_max
+            self.gamma = 0.6
 
             self.tb_writer.add_scalar("parameters/beam_dqn",
                                               beam_dqn, epoch_no)
@@ -217,6 +232,8 @@ class QManager(object):
                 #valid_sources_raw = data_set.src
                 # disable dropout
                 #self.model.eval()
+
+                i_sample = 0
                 for valid_batch in iter(valid_iter):
                     freeze_model(self.model)
                     batch = Batch(valid_batch
@@ -238,11 +255,22 @@ class QManager(object):
                     prev_att_vector = None
                     finished = batch.src_mask.new_zeros((batch_size, 1)).byte()
 
+                    # print("Source_raw: ", batch.src)
+                    # print("Target_raw: ", batch.trg_input)
+                    # print("y0: ", prev_y)
+                    
+                    
+                    
                     exp_list = []
                     # pylint: disable=unused-variable
                     for t in range(self.max_output_length):
-
-                        state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                        if t != 0:
+                            if self.state_type == 'hidden':
+                                state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                            else:
+                                state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
+                                
+                    
                         # decode one single step
                         logits, hidden, att_probs, prev_att_vector = self.model.decoder(
                             encoder_output=encoder_output,
@@ -253,7 +281,14 @@ class QManager(object):
                             prev_att_vector=prev_att_vector,
                             unroll_steps=1)
                         # logits: batch x time=1 x vocab (logits)
-                        state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                        if t != 0:
+                            if self.state_type == 'hidden':
+                                state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                            else:
+                                state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
+                        
+                        # if t == 0:
+                        #     print('states0: ', state, state_)
 
                         # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
 
@@ -262,28 +297,53 @@ class QManager(object):
                             next_word = torch.argsort(logits, descending=True)[:, :, i_ran]
                         else:
                             next_word = torch.argmax(logits, dim=-1)  # batch x time=1
-
-                        a = next_word.squeeze(1).detach().cpu().numpy()[0]
+                        if t != 0:
+                            a = prev_y.squeeze(1).detach().cpu().numpy()[0]
+                        #a = next_word.squeeze(1).detach().cpu().numpy()[0]
+                        
+                        # print("state ",t," : ", state )
+                        # print("state_ ",t," : ", state_ )
+                        # print("action ",t," : ", a )
+                        # print("__________________________________________")
 
                         output.append(next_word.squeeze(1).detach().cpu().numpy())
 
                         #tup = (self.memory_counter, state, a, state_)
-                        self.memory_counter += 1
+                        
                     
                         prev_y = next_word
                         # check if previous symbol was <eos>
                         is_eos = torch.eq(next_word, self.eos_index)
                         finished += is_eos
-                        tup = (self.memory_counter, state, a, state_, is_eos[0,0])
-                        exp_list.append(tup)
+                        if t != 0:
+                            self.memory_counter += 1
+                            tup = (self.memory_counter, state, a, state_, is_eos[0,0])
+                            exp_list.append(tup)
+                        
                         
                         # stop predicting if <eos> reached for all elements in batch
                         if (finished >= 1).sum() == batch_size:
                             break
                     
+                    # if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                    #     print("\n Sample Collected: ", i_sample, "-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
+                    #     print("Target: ", batch.trg, decoded_valid_out_trg)
+                    #     print("Eval  : ", stacked_output, decoded_valid_out, "\n")
+                    #     print("Reward: ", r)
+                    
                     #Collecting rewards
                     hyp = np.stack(output, axis=1)  # batch, time
-                    r = self.Reward(batch.trg, hyp, show=False)  # 1 , time  
+
+                    if epoch_no == 0:
+                        if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                            #print(i_sample)
+                            r = self.Reward(batch.trg, hyp, show=True)  # 1 , time-1 
+                        else:
+                            r = self.Reward(batch.trg, hyp, show=False)  # 1 , time -1 
+                    else:
+                        #print("aaaa - ",i_sample)
+                        r = self.Reward(batch.trg, hyp, show=False)  # 1 , time -1 
+                    i_sample += 1
                     self.store_transition(exp_list, r)
                     
                     #Learning.....
@@ -390,20 +450,15 @@ class QManager(object):
         :param show: Boolean, display the computation of the rewards
         :return: current Bleu score
         """
-        final_rew = np.zeros(len(hyp[0]))
+        rew = np.zeros(len(hyp[0]))
 
-        for t in np.arange(len(hyp[0])):
+        for t in np.arange(len(hyp[0])-1):
             hyp_sub = hyp[:,:t+1]
             #print(hyp_sub)
-            decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg ,
+            decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg,
                                                     cut_at_eos=True)
-            decoded_valid_hyp = self.model.trg_vocab.arrays_to_sentences(arrays=hyp_sub ,
+            decoded_valid_hyp = self.model.trg_vocab.arrays_to_sentences(arrays=hyp_sub,
                                                     cut_at_eos=True)
-
-            if show:
-                print('la lista trg-out decodificada: ', decoded_valid_tar)
-                print('la lista hypotesis decodificada: ', decoded_valid_hyp)
-
             # evaluate with metric on each src, tar, and hypotesis
             join_char = " " if self.level in ["word", "bpe"] else ""
             valid_references = [join_char.join(t) for t in decoded_valid_tar]
@@ -434,16 +489,16 @@ class QManager(object):
                         valid_hypotheses, valid_references)
             else:
                 current_valid_score = -1
-            if show:
-                print(' current_valid_score: ', current_valid_score)
-            final_rew[t] = current_valid_score
+            
+            rew[t+1] = current_valid_score
         
+        final_rew = np.diff(rew)
         if show:
-            print('Reward1 is: ' , final_rew)
-            print('Diff Reward1 is: ' , np.diff(final_rew))
+            print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
+            print("Target: ", trg, decoded_valid_tar)
+            print("Eval  : ", hyp, decoded_valid_hyp)
+            print("Reward: ", final_rew, "\n")
 
-        final_rew[1:] = np.diff(final_rew)
-        #print('Shaped Reward1 is: ' , final_rew)
         return final_rew
 
     def Reward_lin(self, trg, hyp, show = False):
@@ -462,7 +517,7 @@ class QManager(object):
         tar_len = trg.shape[1]
         hyp_len = hyp.shape[1]
 
-        final_rew = -1*np.ones(hyp_len)
+        final_rew = -1*np.ones(hyp_len-1)
 
         len_temp = 0
         if  tar_len > hyp_len:
@@ -520,17 +575,78 @@ class QManager(object):
         else:
             current_valid_score = -1
 
-        k = sum(np.arange(tar_len+1))
-        a_i = np.arange(1,tar_len+1)/k
-        VSa_i = [sum(a_i[:i]) for i in  np.arange(1,tar_len+1, dtype='int')]
+        k = sum(np.arange(tar_len))
+        a_i = np.arange(1,tar_len)/k
+        VSa_i = [sum(a_i[:i]) for i in  np.arange(1,tar_len, dtype='int')]
         VSa_i = np.multiply(np.asanyarray(VSa_i)
                 .reshape([1, tar_len]), equal).reshape([tar_len])
 
-        final_rew[: len_temp] = np.multiply(VSa_i
+        final_rew[: len_temp-1] = np.multiply(VSa_i
         , current_valid_score)[: len_temp]
         
         if show:
             print('Reward is: ' , final_rew)
+            print('sum: ', sum(final_rew))
+        return final_rew
+
+    def Reward_bleu_fin(self, trg, hyp, show = False):
+        """
+        To use as self.Reward funtion.
+        Return an array of rewards, based on the differences
+        of current Blue Score. As proposed on paper.
+
+        :param trg: target.
+        :param hyp: the predicted sequence.
+        :param show: Boolean, display the computation of the rewards
+        :return: current Bleu score
+        """
+        rew = np.zeros(len(hyp[0]))
+
+        decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg,
+                                                    cut_at_eos=True)
+        decoded_valid_hyp = self.model.trg_vocab.arrays_to_sentences(arrays=hyp,
+                                                    cut_at_eos=True)
+
+        # evaluate with metric on each src, tar, and hypotesis
+        join_char = " " if self.level in ["word", "bpe"] else ""
+        valid_references = [join_char.join(t) for t in decoded_valid_tar]
+        valid_hypotheses = [join_char.join(t) for t in decoded_valid_hyp]
+
+        # post-process
+        if self.level == "bpe":
+            valid_references = [bpe_postprocess(v)
+                                for v in valid_references]
+            valid_hypotheses = [bpe_postprocess(v) for
+                                v in valid_hypotheses]
+        # if references are given, evaluate against them
+        if valid_references:
+            assert len(valid_hypotheses) == len(valid_references)
+
+            current_valid_score = 0
+            if self.eval_metric.lower() == 'bleu':
+                # this version does not use any tokenization
+                #print(' aaa ')
+                current_valid_score = bleu(valid_hypotheses, valid_references)
+            elif self.eval_metric.lower() == 'chrf':
+                current_valid_score = chrf(valid_hypotheses, valid_references)
+            elif self.eval_metric.lower() == 'token_accuracy':
+                current_valid_score = token_accuracy(
+                    valid_hypotheses, valid_references, level=self.level)
+            elif self.eval_metric.lower() == 'sequence_accuracy':
+                current_valid_score = sequence_accuracy(
+                    valid_hypotheses, valid_references)
+        else:
+            current_valid_score = -1
+            
+        rew[-1] = current_valid_score
+        
+        final_rew = rew[1:]
+        if show:
+            print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
+            print("Target: ", trg, decoded_valid_tar)
+            print("Eval  : ", hyp, decoded_valid_hyp)
+            print("Reward: ", final_rew, "\n")
+
         return final_rew
 
     def dev_network(self):
@@ -579,7 +695,11 @@ class QManager(object):
 
                 # pylint: disable=unused-variable
                 for t in range(self.max_output_length):
-                    state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu()[0]
+                    
+
+                    # if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                    #     print("state on t = ", t, " : " , state)
+
                     # decode one single step
                     logits, hidden, att_probs, prev_att_vector = self.model.decoder(
                         encoder_output=encoder_output,
@@ -590,6 +710,12 @@ class QManager(object):
                         prev_att_vector=prev_att_vector,
                         unroll_steps=1)
                     # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
+                    
+                    if self.state_type == 'hidden':
+                        state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu()[0]
+                    else:
+                        state = torch.FloatTensor(prev_att_vector.squeeze(1).detach().cpu().numpy()[0])
+
                     logits = self.eval_net(state)
                     logits = logits.reshape([1,1,-1]) 
                     #print(type(logits), logits.shape, logits)
@@ -616,14 +742,18 @@ class QManager(object):
                 decoded_valid_out = self.model.trg_vocab.arrays_to_sentences(arrays=stacked_output,
                                             cut_at_eos=True)
                 
-                if i_sample == 0 or i_sample == 3 or i_sample == 6:
-                    print("\n Sample ", i_sample, "-------------Target vs Eval_net prediction:-------------")
-                    print("Target: ", decoded_valid_out_trg)
-                    print("Eval  : ", decoded_valid_out, "\n")
+                    
 
                 hyp = stacked_output
 
                 r = self.Reward(batch.trg, hyp , show = False)
+                
+                if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                    print("\n Sample ", i_sample, "-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
+                    print("Target: ", batch.trg, decoded_valid_out_trg)
+                    print("Eval  : ", stacked_output, decoded_valid_out, "\n")
+                    print("Reward: ", r)
+
                 #r = self.Reward1(batch.trg, hyp , show = False)
                 r_total += sum(r[np.where(r > 0)])
                 if i_sample ==0:
@@ -675,6 +805,9 @@ class QManager(object):
             self.dev_network_count += 1
             self.tb_writer.add_scalar("dev/dev_reward",
                                             r_total, self.dev_network_count)
+            self.tb_writer.add_scalar("dev/dev_bleu",
+                                            current_valid_score, self.dev_network_count)
+            
             print(self.dev_network_count ,' r_total and score: ', r_total , current_valid_score)
 
             

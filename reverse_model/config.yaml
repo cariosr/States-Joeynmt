@@ -42,7 +42,7 @@ training:
     overwrite: True
     shuffle: True
     use_cuda: False
-    max_output_length: 30
+    max_output_length: 10
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
 
@@ -58,7 +58,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 64
+        hidden_size: 16
         bidirectional: True
         dropout: 0.1
         num_layers: 1
@@ -67,7 +67,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 64
+        hidden_size: 16
         dropout: 0.1
         hidden_dropout: 0.1
         num_layers: 1
@@ -76,14 +76,15 @@ model:
         attention: "luong"
 dqn:
     epochs: 2000
-    sample_size: 800
+    sample_size: 256
     lr: 0.01
     egreed_max: 0.9
-    egreed_min: 0.01
+    egreed_min: 0.001
     gamma_max: 0.9
-    gamma_min: 0.5
-    nu_iter: 200
+    gamma_min: 0.3
+    nu_iter: 300
     mem_cap: 5000
     beam_min: 2
     beam_max: 50
     state_type: 'hidden'
+    reward_type: 'bleu_fin'
