@@ -4,7 +4,7 @@ Prior work, with extracting the hidden states from LSTM joey model. And using it
 The code is implemented based on the same logic used on the original **joeynmt** repository. 
 On that sense, the installation is exactly de same:
 
-1. `git clone https://github.com/joeynmt/joeynmt.git`
+1. `git clone <path from this repository>`
 1. `cd joeynmt`
 1. `pip3 install .`
 
