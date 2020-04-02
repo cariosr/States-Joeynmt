@@ -265,14 +265,14 @@ class QManager(object):
                     exp_list = []
                     # pylint: disable=unused-variable
                     for t in range(self.max_output_length):
-                        # if t != 0:
-                        if self.state_type == 'hidden':
-                            state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                        else:
-                            if t == 0:
-                                state = hidden[0].squeeze(1).detach().cpu().numpy()[0]
+                        if t != 0:
+                            if self.state_type == 'hidden':
+                                state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
                             else:
-                                state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
+                                if t == 0:
+                                    state = hidden[0].squeeze(1).detach().cpu().numpy()[0]
+                                else:
+                                    state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
                                 
                     
                         # decode one single step
@@ -285,11 +285,11 @@ class QManager(object):
                             prev_att_vector=prev_att_vector,
                             unroll_steps=1)
                         # logits: batch x time=1 x vocab (logits)
-                        # if t != 0:
-                        if self.state_type == 'hidden':
-                            state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                        else:
-                            state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
+                        if t != 0:
+                            if self.state_type == 'hidden':
+                                state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                            else:
+                                state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
                         
                         # if t == 0:
                         #     print('states0: ', state, state_)
@@ -319,15 +319,31 @@ class QManager(object):
                         # check if previous symbol was <eos>
                         is_eos = torch.eq(next_word, self.eos_index)
                         finished += is_eos
-                        #if t != 0:
-                        self.memory_counter += 1
-                        tup = (self.memory_counter, state, a, state_, is_eos[0,0])
-                        exp_list.append(tup)
+                        if t != 0:
+                            self.memory_counter += 1
+                            tup = (self.memory_counter, state, a, state_, 1)
+                            exp_list.append(tup)
                         
-                        
+                        print(t)
                         # stop predicting if <eos> reached for all elements in batch
                         if (finished >= 1).sum() == batch_size:
+                            a = next_word.squeeze(1).detach().cpu().numpy()[0]
+                            self.memory_counter += 1
+                            #tup = (self.memory_counter, state_, a, np.zeros([self.state_size]) , is_eos[0,0])
+                            tup = (self.memory_counter, state_, a, np.zeros([self.state_size]), 0)
+                            exp_list.append(tup)
+                            print('break')
                             break
+                        if t == self.max_output_length-1:
+                            print("reach the max output")
+                            a = 0
+                            self.memory_counter += 1
+                            #tup = (self.memory_counter, state_, a, np.zeros([self.state_size]) , is_eos[0,0])
+                            tup = (self.memory_counter, state_, a, -1*np.ones([self.state_size]), 1)
+                            exp_list.append(tup)
+                            
+                        
+                            
                     
                     #Collecting rewards
                     hyp = np.stack(output, axis=1)  # batch, time
@@ -396,7 +412,7 @@ class QManager(object):
 
         b_is_eos = torch.FloatTensor(b_memory[:, self.size_memory1-1:]).view(self.sample_size, 1)
         #print(b_a, b_a.size)
-        
+        #print(b_is_eos)
         #Activate the eval_net
         unfreeze_model(self.eval_net)
         
@@ -434,13 +450,21 @@ class QManager(object):
         :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
         :param rew: rewards for every experince. Of lenght of the hypotesis        
         """
+
+        if len(exp_list) != len(rew):
+            print(' exp_list: ', exp_list)
+            print(' rew: ', rew)
+            
+
         assert (len(exp_list) == len(rew) )
         for i, ele in enumerate(exp_list):
+            
             index, state, a, state_, is_eos  = ele
             index = index % self.mem_cap
             
             r = rew[i]
-            transition = np.hstack((state, [a, r], state_, np.invert(is_eos)))
+            transition = np.hstack((state, [a, r], state_, is_eos))
+            #print(i, a, r, is_eos)
             self.memory[index, :] = transition
 
 
@@ -462,7 +486,7 @@ class QManager(object):
         # print('aa',len(hyp[0]))
         discount_ini_token = 1
         discount_fin_token = 1
-        if trg[0,1] != hyp[0,1]:
+        if trg[0,0] != hyp[0,0]:
             #print(trg, hyp)
             discount_ini_token = 0.5
         if len(hyp[0]) > len(trg[0]):
@@ -498,6 +522,9 @@ class QManager(object):
                 current_valid_score *= discount_ini_token
             if t > len(trg[0]):
                 current_valid_score *= discount_fin_token
+
+            if t > self.max_output_length-1:
+                current_valid_score = -10
             # if show:
             #     print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
             #     print("Target: ", trg, decoded_valid_tar, valid_references)
