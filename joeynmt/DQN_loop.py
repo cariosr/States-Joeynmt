@@ -462,7 +462,6 @@ class QManager(object):
         # print('aa',len(hyp[0]))
         discount_ini_token = 1
         discount_fin_token = 1
-        #print(trg, hyp)
         if trg[0,0] != hyp[0,0]:
             #print(trg, hyp)
             discount_ini_token = 0.5
