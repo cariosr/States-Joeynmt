@@ -18,6 +18,7 @@ from joeynmt.metrics import bleu, chrf, token_accuracy, sequence_accuracy
 
 import random
 from torch.utils.tensorboard import SummaryWriter
+import sacrebleu
 
 def freeze_model(model):
     model.eval()
@@ -51,7 +52,7 @@ class Net(nn.Module):
         actions_value = self.out(x)
         return actions_value
 
-
+random.seed(10)
 class QManager(object):
     """ Manages Q-learning loop, Agregate the .yalm parameters, 
         Initiate the model, test, Dev and Targets data.           
@@ -180,7 +181,7 @@ class QManager(object):
         path_tensroboard = self.model_dir + "/tensorboard_DQN/"
         self.tb_writer = SummaryWriter( log_dir=path_tensroboard , purge_step=0)
         self.dev_network_count = 0
-
+        print(cfg["dqn"]["reward_type"])
         #Reward funtion related:
         if cfg["dqn"]["reward_type"] == "bleu_diff" : 
             print("You select the reward based on the Bleu score differences")
@@ -202,12 +203,12 @@ class QManager(object):
         """
         for epoch_no in range(self.epochs):
             print("EPOCH %d", epoch_no + 1)
-
+            
             #beam_dqn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            beam_dqn = 1
+            beam_dqn = 2
             egreed = 0.5
             #self.gamma = self.gamma_max
             self.gamma = 0.6
@@ -264,9 +265,12 @@ class QManager(object):
                     exp_list = []
                     # pylint: disable=unused-variable
                     for t in range(self.max_output_length):
-                        if t != 0:
-                            if self.state_type == 'hidden':
-                                state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                        # if t != 0:
+                        if self.state_type == 'hidden':
+                            state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                        else:
+                            if t == 0:
+                                state = hidden[0].squeeze(1).detach().cpu().numpy()[0]
                             else:
                                 state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
                                 
@@ -281,24 +285,24 @@ class QManager(object):
                             prev_att_vector=prev_att_vector,
                             unroll_steps=1)
                         # logits: batch x time=1 x vocab (logits)
-                        if t != 0:
-                            if self.state_type == 'hidden':
-                                state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                            else:
-                                state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
+                        # if t != 0:
+                        if self.state_type == 'hidden':
+                            state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                        else:
+                            state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
                         
                         # if t == 0:
                         #     print('states0: ', state, state_)
 
                         # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
-
+                        
                         if random.uniform(0, 1) < egreed:
                             i_ran = random.randint(0,beam_dqn-1)
                             next_word = torch.argsort(logits, descending=True)[:, :, i_ran]
                         else:
                             next_word = torch.argmax(logits, dim=-1)  # batch x time=1
-                        if t != 0:
-                            a = prev_y.squeeze(1).detach().cpu().numpy()[0]
+                        # if t != 0:
+                        a = prev_y.squeeze(1).detach().cpu().numpy()[0]
                         #a = next_word.squeeze(1).detach().cpu().numpy()[0]
                         
                         # print("state ",t," : ", state )
@@ -315,21 +319,15 @@ class QManager(object):
                         # check if previous symbol was <eos>
                         is_eos = torch.eq(next_word, self.eos_index)
                         finished += is_eos
-                        if t != 0:
-                            self.memory_counter += 1
-                            tup = (self.memory_counter, state, a, state_, is_eos[0,0])
-                            exp_list.append(tup)
+                        #if t != 0:
+                        self.memory_counter += 1
+                        tup = (self.memory_counter, state, a, state_, is_eos[0,0])
+                        exp_list.append(tup)
                         
                         
                         # stop predicting if <eos> reached for all elements in batch
                         if (finished >= 1).sum() == batch_size:
                             break
-                    
-                    # if i_sample == 0 or i_sample == 3 or i_sample == 6:
-                    #     print("\n Sample Collected: ", i_sample, "-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
-                    #     print("Target: ", batch.trg, decoded_valid_out_trg)
-                    #     print("Eval  : ", stacked_output, decoded_valid_out, "\n")
-                    #     print("Reward: ", r)
                     
                     #Collecting rewards
                     hyp = np.stack(output, axis=1)  # batch, time
@@ -343,6 +341,13 @@ class QManager(object):
                     else:
                         #print("aaaa - ",i_sample)
                         r = self.Reward(batch.trg, hyp, show=False)  # 1 , time -1 
+                    
+                    # if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                    #     print("\n Sample Collected: ", i_sample, "-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
+                    #     print("Target: ", batch.trg, decoded_valid_out_trg)
+                    #     print("Eval  : ", stacked_output, decoded_valid_out)
+                    #     print("Reward: ", r, "\n")
+                    
                     i_sample += 1
                     self.store_transition(exp_list, r)
                     
@@ -450,7 +455,19 @@ class QManager(object):
         :param show: Boolean, display the computation of the rewards
         :return: current Bleu score
         """
-        rew = np.zeros(len(hyp[0]))
+
+
+        smooth = 0.001
+        rew = np.zeros([len(hyp[0])])
+        # print('aa',len(hyp[0]))
+        discount_ini_token = 1
+        discount_fin_token = 1
+        if trg[0,1] != hyp[0,1]:
+            #print(trg, hyp)
+            discount_ini_token = 0.5
+        if len(hyp[0]) > len(trg[0]):
+            discount_ini_token = 0.5
+
 
         for t in np.arange(len(hyp[0])-1):
             hyp_sub = hyp[:,:t+1]
@@ -463,7 +480,6 @@ class QManager(object):
             join_char = " " if self.level in ["word", "bpe"] else ""
             valid_references = [join_char.join(t) for t in decoded_valid_tar]
             valid_hypotheses = [join_char.join(t) for t in decoded_valid_hyp]
-
             # post-process
             if self.level == "bpe":
                 valid_references = [bpe_postprocess(v)
@@ -474,25 +490,31 @@ class QManager(object):
             if valid_references:
                 assert len(valid_hypotheses) == len(valid_references)
 
-                current_valid_score = 0
-                if self.eval_metric.lower() == 'bleu':
-                    # this version does not use any tokenization
-                    #print(' aaa ')
-                    current_valid_score = bleu(valid_hypotheses, valid_references)
-                elif self.eval_metric.lower() == 'chrf':
-                    current_valid_score = chrf(valid_hypotheses, valid_references)
-                elif self.eval_metric.lower() == 'token_accuracy':
-                    current_valid_score = token_accuracy(
-                        valid_hypotheses, valid_references, level=self.level)
-                elif self.eval_metric.lower() == 'sequence_accuracy':
-                    current_valid_score = sequence_accuracy(
-                        valid_hypotheses, valid_references)
-            else:
-                current_valid_score = -1
+                
+            current_valid_score = sacrebleu.corpus_bleu(valid_hypotheses[0]
+                , valid_references[0], smooth_method='floor', smooth_value=smooth
+                , use_effective_order=True).score
+            if t == 0:
+                current_valid_score *= discount_ini_token
+            if t > len(trg[0]):
+                current_valid_score *= discount_fin_token
+            # if show:
+            #     print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
+            #     print("Target: ", trg, decoded_valid_tar, valid_references)
+            #     print("Eval  : ", hyp_sub, decoded_valid_hyp, valid_hypotheses )
+            #     print("Current Reward: ", current_valid_score, "\n")
             
+
             rew[t+1] = current_valid_score
-        
-        final_rew = np.diff(rew)
+        if show:
+            print('rew: ', rew)
+
+        rew[:-1] = np.diff(rew)
+        final_rew = rew  
+        # final_rew = np.zeros(len(hyp[0]))
+        # final_rew[0] = r_1
+        # #print(rew)
+        # final_rew[1:] = np.diff(rew)
         if show:
             print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
             print("Target: ", trg, decoded_valid_tar)
@@ -579,7 +601,7 @@ class QManager(object):
         a_i = np.arange(1,tar_len)/k
         VSa_i = [sum(a_i[:i]) for i in  np.arange(1,tar_len, dtype='int')]
         VSa_i = np.multiply(np.asanyarray(VSa_i)
-                .reshape([1, tar_len]), equal).reshape([tar_len])
+                .reshape([1, tar_len-1]), equal).reshape([tar_len-1])
 
         final_rew[: len_temp-1] = np.multiply(VSa_i
         , current_valid_score)[: len_temp]
@@ -828,7 +850,8 @@ def dqn_train(cfg_file, ckpt: str, output_path: str = None) -> None:
     :param output_path: path to output file
     """
     #cfg_file = "./reverse_model/config.yaml"
-    cfg_file = "./configs/reverse.yaml" 
-    MDQN = QManager(cfg_file, "./reverse_model/best.ckpt")
+    #cfg_file = "./configs/reverse.yaml" 
+    #MDQN = QManager(cfg_file, "./reverse_model/best.ckpt")
+    MDQN = QManager(cfg_file, ckpt)
     MDQN.Collecting_experiences()
 

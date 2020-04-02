@@ -86,5 +86,5 @@ dqn:
     mem_cap: 5000
     beam_min: 2
     beam_max: 50
-    state_type: 'hidden'
-    reward_type: 'bleu_fin'
+    state_type: 'attention'
+    reward_type: 'bleu_diff'
