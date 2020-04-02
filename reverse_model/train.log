@@ -1,3 +1,104 @@
+<<<<<<< HEAD
+2020-04-01 16:45:55,632 Hello! This is Joey-NMT.
+2020-04-01 16:45:57,617 Total params: 109024
+2020-04-01 16:45:57,617 Trainable parameters: ['decoder.att_vector_layer.bias', 'decoder.att_vector_layer.weight', 'decoder.attention.key_layer.weight', 'decoder.bridge_layer.bias', 'decoder.bridge_layer.weight', 'decoder.output_layer.weight', 'decoder.rnn.bias_hh_l0', 'decoder.rnn.bias_ih_l0', 'decoder.rnn.weight_hh_l0', 'decoder.rnn.weight_ih_l0', 'encoder.rnn.bias_hh_l0', 'encoder.rnn.bias_hh_l0_reverse', 'encoder.rnn.bias_ih_l0', 'encoder.rnn.bias_ih_l0_reverse', 'encoder.rnn.weight_hh_l0', 'encoder.rnn.weight_hh_l0_reverse', 'encoder.rnn.weight_ih_l0', 'encoder.rnn.weight_ih_l0_reverse', 'src_embed.lut.weight', 'trg_embed.lut.weight']
+2020-04-01 16:45:57,618 cfg.name                           : reverse_experiment
+2020-04-01 16:45:57,618 cfg.data.src                       : src
+2020-04-01 16:45:57,618 cfg.data.trg                       : trg
+2020-04-01 16:45:57,618 cfg.data.train                     : test/data/reverse/train
+2020-04-01 16:45:57,618 cfg.data.dev                       : test/data/reverse/dev
+2020-04-01 16:45:57,618 cfg.data.test                      : test/data/reverse/test
+2020-04-01 16:45:57,618 cfg.data.level                     : word
+2020-04-01 16:45:57,618 cfg.data.lowercase                 : False
+2020-04-01 16:45:57,618 cfg.data.max_sent_length           : 25
+2020-04-01 16:45:57,618 cfg.data.src_voc_min_freq          : 0
+2020-04-01 16:45:57,618 cfg.data.src_voc_limit             : 100
+2020-04-01 16:45:57,618 cfg.data.trg_voc_min_freq          : 0
+2020-04-01 16:45:57,618 cfg.data.trg_voc_limit             : 100
+2020-04-01 16:45:57,618 cfg.testing.beam_size              : 1
+2020-04-01 16:45:57,618 cfg.testing.alpha                  : 1.0
+2020-04-01 16:45:57,618 cfg.training.random_seed           : 42
+2020-04-01 16:45:57,619 cfg.training.optimizer             : adam
+2020-04-01 16:45:57,619 cfg.training.learning_rate         : 0.001
+2020-04-01 16:45:57,619 cfg.training.learning_rate_min     : 0.0002
+2020-04-01 16:45:57,619 cfg.training.weight_decay          : 0.0
+2020-04-01 16:45:57,619 cfg.training.clip_grad_norm        : 1.0
+2020-04-01 16:45:57,619 cfg.training.batch_size            : 10
+2020-04-01 16:45:57,619 cfg.training.batch_type            : sentence
+2020-04-01 16:45:57,619 cfg.training.scheduling            : plateau
+2020-04-01 16:45:57,619 cfg.training.patience              : 5
+2020-04-01 16:45:57,619 cfg.training.decrease_factor       : 0.5
+2020-04-01 16:45:57,619 cfg.training.early_stopping_metric : eval_metric
+2020-04-01 16:45:57,619 cfg.training.epochs                : 2
+2020-04-01 16:45:57,619 cfg.training.validation_freq       : 1000
+2020-04-01 16:45:57,619 cfg.training.logging_freq          : 100
+2020-04-01 16:45:57,619 cfg.training.eval_metric           : bleu
+2020-04-01 16:45:57,619 cfg.training.model_dir             : reverse_model
+2020-04-01 16:45:57,619 cfg.training.overwrite             : True
+2020-04-01 16:45:57,619 cfg.training.shuffle               : True
+2020-04-01 16:45:57,619 cfg.training.use_cuda              : False
+2020-04-01 16:45:57,619 cfg.training.max_output_length     : 30
+2020-04-01 16:45:57,619 cfg.training.print_valid_sents     : [0, 3, 6]
+2020-04-01 16:45:57,619 cfg.training.keep_last_ckpts       : 2
+2020-04-01 16:45:57,620 cfg.model.initializer              : xavier
+2020-04-01 16:45:57,620 cfg.model.embed_initializer        : normal
+2020-04-01 16:45:57,620 cfg.model.embed_init_weight        : 0.1
+2020-04-01 16:45:57,620 cfg.model.bias_initializer         : zeros
+2020-04-01 16:45:57,620 cfg.model.init_rnn_orthogonal      : False
+2020-04-01 16:45:57,620 cfg.model.lstm_forget_gate         : 0.0
+2020-04-01 16:45:57,620 cfg.model.encoder.rnn_type         : lstm
+2020-04-01 16:45:57,620 cfg.model.encoder.embeddings.embedding_dim : 16
+2020-04-01 16:45:57,620 cfg.model.encoder.embeddings.scale : False
+2020-04-01 16:45:57,620 cfg.model.encoder.hidden_size      : 64
+2020-04-01 16:45:57,620 cfg.model.encoder.bidirectional    : True
+2020-04-01 16:45:57,620 cfg.model.encoder.dropout          : 0.1
+2020-04-01 16:45:57,620 cfg.model.encoder.num_layers       : 1
+2020-04-01 16:45:57,620 cfg.model.decoder.rnn_type         : lstm
+2020-04-01 16:45:57,620 cfg.model.decoder.embeddings.embedding_dim : 16
+2020-04-01 16:45:57,620 cfg.model.decoder.embeddings.scale : False
+2020-04-01 16:45:57,620 cfg.model.decoder.hidden_size      : 64
+2020-04-01 16:45:57,620 cfg.model.decoder.dropout          : 0.1
+2020-04-01 16:45:57,620 cfg.model.decoder.hidden_dropout   : 0.1
+2020-04-01 16:45:57,620 cfg.model.decoder.num_layers       : 1
+2020-04-01 16:45:57,620 cfg.model.decoder.input_feeding    : True
+2020-04-01 16:45:57,620 cfg.model.decoder.init_hidden      : bridge
+2020-04-01 16:45:57,620 cfg.model.decoder.attention        : luong
+2020-04-01 16:45:57,620 cfg.dqn.epochs                     : 2000
+2020-04-01 16:45:57,620 cfg.dqn.sample_size                : 256
+2020-04-01 16:45:57,620 cfg.dqn.lr                         : 0.01
+2020-04-01 16:45:57,620 cfg.dqn.egreed_max                 : 0.9
+2020-04-01 16:45:57,620 cfg.dqn.egreed_min                 : 0.01
+2020-04-01 16:45:57,621 cfg.dqn.gamma_max                  : 0.9
+2020-04-01 16:45:57,621 cfg.dqn.gamma_min                  : 0.3
+2020-04-01 16:45:57,621 cfg.dqn.nu_iter                    : 300
+2020-04-01 16:45:57,621 cfg.dqn.mem_cap                    : 5000
+2020-04-01 16:45:57,621 cfg.dqn.beam_min                   : 2
+2020-04-01 16:45:57,621 cfg.dqn.beam_max                   : 50
+2020-04-01 16:45:57,621 cfg.dqn.state_type                 : hidden
+2020-04-01 16:45:57,621 cfg.dqn.reward_type                : bleu_diff
+2020-04-01 16:45:57,621 Data set sizes: 
+	train 100,
+	valid 10,
+	test 10
+2020-04-01 16:45:57,621 First training example:
+	[SRC] 3
+	[TRG] 3
+2020-04-01 16:45:57,621 First 10 words (src): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 3 (5) 1 (6) 4 (7) 0 (8) 2
+2020-04-01 16:45:57,621 First 10 words (trg): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 3 (5) 1 (6) 4 (7) 0 (8) 2
+2020-04-01 16:45:57,621 Number of Src words (types): 9
+2020-04-01 16:45:57,621 Number of Trg words (types): 9
+2020-04-01 16:45:57,621 Model(
+	encoder=RecurrentEncoder(LSTM(16, 64, batch_first=True, bidirectional=True)),
+	decoder=RecurrentDecoder(rnn=LSTM(80, 64, batch_first=True), attention=LuongAttention),
+	src_embed=Embeddings(embedding_dim=16, vocab_size=9),
+	trg_embed=Embeddings(embedding_dim=16, vocab_size=9))
+2020-04-01 16:45:57,622 EPOCH 1
+2020-04-01 16:45:57,786 Epoch   1: total training loss 42.28
+2020-04-01 16:45:57,786 EPOCH 2
+2020-04-01 16:45:57,917 Epoch   2: total training loss 35.72
+2020-04-01 16:45:57,917 Training ended after   2 epochs.
+2020-04-01 16:45:57,917 Best validation result (greedy) at step        0:   -inf eval_metric.
+=======
 2020-04-01 21:48:10,408 Hello! This is Joey-NMT.
 2020-04-01 21:48:10,411 Total params: 10048
 2020-04-01 21:48:10,412 Trainable parameters: ['decoder.att_vector_layer.bias', 'decoder.att_vector_layer.weight', 'decoder.attention.key_layer.weight', 'decoder.bridge_layer.bias', 'decoder.bridge_layer.weight', 'decoder.output_layer.weight', 'decoder.rnn.bias_hh_l0', 'decoder.rnn.bias_ih_l0', 'decoder.rnn.weight_hh_l0', 'decoder.rnn.weight_ih_l0', 'encoder.rnn.bias_hh_l0', 'encoder.rnn.bias_hh_l0_reverse', 'encoder.rnn.bias_ih_l0', 'encoder.rnn.bias_ih_l0_reverse', 'encoder.rnn.weight_hh_l0', 'encoder.rnn.weight_hh_l0_reverse', 'encoder.rnn.weight_ih_l0', 'encoder.rnn.weight_ih_l0_reverse', 'src_embed.lut.weight', 'trg_embed.lut.weight']
@@ -163,3 +264,4 @@
 2020-04-01 21:49:15,123 Translations saved to: reverse_model/00002000.hyps.dev
 2020-04-01 21:49:15,354 test bleu:   0.00 [Greedy decoding]
 2020-04-01 21:49:15,354 Translations saved to: reverse_model/00002000.hyps.test
+>>>>>>> 48c5694feab861e853191fc0d0dc06268b15f889
