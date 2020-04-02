@@ -86,4 +86,6 @@ dqn:
     mem_cap: 2000    		    # Number of buffer experience
     beam_min: 1				    # Beam minimun value
     beam_max: 50			    # Beam Maximun value
-    state_type: 'hidden'        # Which kind of state is used? 'hidden' -> hidden_size*2, 'attention' -> hidden_size, 'transformer'  
+    state_type: 'attention'        # Which kind of state is used? 'hidden' -> hidden_size*2, 'attention' -> hidden_size, 'transformer'  
+    reward_type: 'bleu_fin'     # The type of reward is used. 'bleu_fin' (on the last state the reward). 'bleu_lin' 'bleu_diff'
+    

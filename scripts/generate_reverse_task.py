@@ -28,17 +28,17 @@ def save_samples(samples, prefix="train", ext="src", reverse=False):
 def generate_task(train="train", dev="dev", test="test", src="src", trg="trg"):
 
     # train
-    samples = generate_samples(50000, high=50, maxlen=25)
+    samples = generate_samples(10000, high=10, maxlen=5)
     save_samples(samples, prefix=train, ext=src, reverse=False)
     save_samples(samples, prefix=train, ext=trg, reverse=True)
 
     # dev
-    samples = generate_samples(1000, high=50,  maxlen=30)
+    samples = generate_samples(200, high=10,  maxlen=6)
     save_samples(samples, prefix=dev, ext=src, reverse=False)
     save_samples(samples, prefix=dev, ext=trg, reverse=True)
 
     # test
-    samples = generate_samples(1000, high=50, maxlen=30)
+    samples = generate_samples(200, high=50, maxlen=6)
     save_samples(samples, prefix=test, ext=src, reverse=False)
     save_samples(samples, prefix=test, ext=trg, reverse=True)
 
