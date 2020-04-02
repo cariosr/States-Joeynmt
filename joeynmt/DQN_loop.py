@@ -208,7 +208,7 @@ class QManager(object):
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            beam_dqn = 2
+            beam_dqn = 1
             egreed = 0.5
             #self.gamma = self.gamma_max
             self.gamma = 0.6
@@ -324,7 +324,7 @@ class QManager(object):
                             tup = (self.memory_counter, state, a, state_, 1)
                             exp_list.append(tup)
                         
-                        print(t)
+                        #print(t)
                         # stop predicting if <eos> reached for all elements in batch
                         if (finished >= 1).sum() == batch_size:
                             a = next_word.squeeze(1).detach().cpu().numpy()[0]
@@ -332,10 +332,10 @@ class QManager(object):
                             #tup = (self.memory_counter, state_, a, np.zeros([self.state_size]) , is_eos[0,0])
                             tup = (self.memory_counter, state_, a, np.zeros([self.state_size]), 0)
                             exp_list.append(tup)
-                            print('break')
+                            #print('break')
                             break
                         if t == self.max_output_length-1:
-                            print("reach the max output")
+                            #print("reach the max output")
                             a = 0
                             self.memory_counter += 1
                             #tup = (self.memory_counter, state_, a, np.zeros([self.state_size]) , is_eos[0,0])
