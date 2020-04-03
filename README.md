@@ -22,8 +22,6 @@ Modify the config file. `reverse_model/config`
 
 An actor model is nedded. The used is the LSTM, and there is already a trained model.
 But, in case is nedded to train new one. Use the train function, as follow:
-* `python3 -m joeynmt train configs/reverse.yaml`
-And to test the performace:
 * `python3 -m joeynmt test reverse_model/config.yaml --output_path reverse_model/predictions`
 
 Now, is ready to test the code related to the DQN approach. 

@@ -1,12 +1,12 @@
-name: "reverse_experiment"
+name: "mini_reverse_model"
 
 data:
     src: "src"
     trg: "trg"
     # generate data with scripts/generate_reverse_task.py
-    train: "test/data/reverse/train"
-    dev: "test/data/reverse/dev"
-    test: "test/data/reverse/test"
+    train: "test/data/mini_reverse/train"
+    dev: "test/data/mini_reverse/dev"
+    test: "test/data/mini_reverse/test"
     level: "word"
     lowercase: False
     max_sent_length: 25
@@ -14,8 +14,8 @@ data:
     src_voc_limit: 100
     trg_voc_min_freq: 0
     trg_voc_limit: 100
-    #src_vocab: "reverse_model/src_vocab.txt"
-    #trg_vocab: "reverse_model/trg_vocab.txt"
+    #src_vocab: "mini_reverse_model/src_vocab.txt"
+    #trg_vocab: "mini_reverse_model/trg_vocab.txt"
 
 testing:
     beam_size: 1
@@ -34,15 +34,15 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 2
-    validation_freq: 1000
-    logging_freq: 100
+    epochs: 50
+    validation_freq: 10
+    logging_freq: 10
     eval_metric: "bleu"
-    model_dir: "reverse_model"
+    model_dir: "mini_reverse_model"
     overwrite: True
     shuffle: True
     use_cuda: False
-    max_output_length: 10
+    max_output_length: 30
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
 
@@ -58,7 +58,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 16
+        hidden_size: 64
         bidirectional: True
         dropout: 0.1
         num_layers: 1
@@ -67,7 +67,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 16
+        hidden_size: 64
         dropout: 0.1
         hidden_dropout: 0.1
         num_layers: 1
@@ -84,8 +84,7 @@ dqn:
     gamma_min: 0.3
     nu_iter: 300
     mem_cap: 5000
-    beam_min: 2
+    beam_min: 1
     beam_max: 50
-    state_type: 'attention'
+    state_type: 'hidden'
     reward_type: 'bleu_diff'
-    nu_pretrain: 200
