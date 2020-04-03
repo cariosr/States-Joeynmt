@@ -121,7 +121,8 @@ class QManager(object):
         self.beam_min = cfg["dqn"]["beam_min"]
         self.beam_max = cfg["dqn"]["beam_max"]
         self.state_type = cfg["dqn"]["state_type"]
-        
+        self.nu_pretrain = cfg["dqn"]["nu_pretrain"]
+
         if self.state_type == 'hidden':
             self.state_size = cfg["model"]["encoder"]["hidden_size"]*2
         else:
@@ -144,7 +145,7 @@ class QManager(object):
 
         self.learn_step_counter = 0
         self.memory_counter = 0
-        self.size_memory1 = self.state_size * 2 + 2 + 1
+        self.size_memory1 = self.state_size * 2 + 2 + 2
         self.memory = np.zeros((self.mem_cap, self.size_memory1 ))
         self.optimizer = torch.optim.Adam(self.eval_net.parameters()
                                           , lr=self.lr )
@@ -256,8 +257,14 @@ class QManager(object):
                     prev_att_vector = None
                     finished = batch.src_mask.new_zeros((batch_size, 1)).byte()
 
-                    # print("Source_raw: ", batch.src)
-                    # print("Target_raw: ", batch.trg_input)
+                    #print("Source_raw: ", batch.src)
+                    #print("Target_raw: ", batch.trg_input)
+
+                    # get the raw vector in order to use it
+                    # later in the learning for the true actions
+                    trg_input = batch.trg_input.cpu().detach().numpy().squeeze()
+
+                    #print ("trg numpy: ", trg_input_np)
                     # print("y0: ", prev_y)
                     
                     
@@ -273,8 +280,7 @@ class QManager(object):
                                 state = hidden[0].squeeze(1).detach().cpu().numpy()[0]
                             else:
                                 state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
-                                
-                    
+
                         # decode one single step
                         logits, hidden, att_probs, prev_att_vector = self.model.decoder(
                             encoder_output=encoder_output,
@@ -290,12 +296,12 @@ class QManager(object):
                             state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
                         else:
                             state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
-                        
+
                         # if t == 0:
                         #     print('states0: ', state, state_)
 
                         # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
-                        
+
                         if random.uniform(0, 1) < egreed:
                             i_ran = random.randint(0,beam_dqn-1)
                             next_word = torch.argsort(logits, descending=True)[:, :, i_ran]
@@ -303,8 +309,16 @@ class QManager(object):
                             next_word = torch.argmax(logits, dim=-1)  # batch x time=1
                         # if t != 0:
                         a = prev_y.squeeze(1).detach().cpu().numpy()[0]
+
+                        # get the true action for s_ for the training
+
+                        if t < trg_input.size - 1:
+                            a_ = trg_input[t+1]
+                        else:
+                            a_ = 0
+
                         #a = next_word.squeeze(1).detach().cpu().numpy()[0]
-                        
+
                         # print("state ",t," : ", state )
                         # print("state_ ",t," : ", state_ )
                         # print("action ",t," : ", a )
@@ -313,18 +327,18 @@ class QManager(object):
                         output.append(next_word.squeeze(1).detach().cpu().numpy())
 
                         #tup = (self.memory_counter, state, a, state_)
-                        
-                    
+
+
                         prev_y = next_word
                         # check if previous symbol was <eos>
                         is_eos = torch.eq(next_word, self.eos_index)
                         finished += is_eos
                         #if t != 0:
                         self.memory_counter += 1
-                        tup = (self.memory_counter, state, a, state_, is_eos[0,0])
+                        tup = (self.memory_counter, state, a, state_, a_, is_eos[0,0])
                         exp_list.append(tup)
-                        
-                        
+
+
                         # stop predicting if <eos> reached for all elements in batch
                         if (finished >= 1).sum() == batch_size:
                             break
@@ -403,8 +417,14 @@ class QManager(object):
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
-        #taking the most likely action.
-        b_a_ = torch.LongTensor(q_next.max(1)[1].view(self.sample_size, 1).long())
+        # taking the most likely action.
+        # use the hyperparameter nu_pretrain to take the true action
+        # or the one take from the one computed from the q_target
+        if self.learn_step_counter < self.nu_pretrain:
+            #print ("Using pretraining...")
+            b_a_ = torch.LongTensor(b_memory[:, self.state_size+2 + self.state_size]).view(self.sample_size, 1)
+        else:
+            b_a_ = torch.LongTensor(q_next.max(1)[1].view(self.sample_size, 1).long())
         #b_a_ = q_next.max(1)[0].view(self.sample_size, 1).long()   # shape (batch, 1)
         q_eval_next = self.eval_net(b_s_).gather(1, b_a_)   # shape (batch, 1)
         
@@ -436,11 +456,11 @@ class QManager(object):
         """
         assert (len(exp_list) == len(rew) )
         for i, ele in enumerate(exp_list):
-            index, state, a, state_, is_eos  = ele
+            index, state, a, state_, a_, is_eos  = ele
             index = index % self.mem_cap
             
             r = rew[i]
-            transition = np.hstack((state, [a, r], state_, np.invert(is_eos)))
+            transition = np.hstack((state, [a, r], state_, a_, np.invert(is_eos)))
             self.memory[index, :] = transition
 
 
