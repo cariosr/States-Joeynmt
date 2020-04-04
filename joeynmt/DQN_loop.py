@@ -209,7 +209,7 @@ class QManager(object):
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
 
-            beam_dqn = 2
+            beam_dqn = 1
             egreed = 0.5
             #self.gamma = self.gamma_max
             self.gamma = 0.6
@@ -266,20 +266,18 @@ class QManager(object):
 
                     #print ("trg numpy: ", trg_input_np)
                     # print("y0: ", prev_y)
-                    
-                    
-                    
+
                     exp_list = []
                     # pylint: disable=unused-variable
                     for t in range(self.max_output_length):
-                        # if t != 0:
-                        if self.state_type == 'hidden':
-                            state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                        else:
-                            if t == 0:
-                                state = hidden[0].squeeze(1).detach().cpu().numpy()[0]
+                        if t != 0:
+                            if self.state_type == 'hidden':
+                                state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
                             else:
                                 state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
+
+
+                                
 
                         # decode one single step
                         logits, hidden, att_probs, prev_att_vector = self.model.decoder(
@@ -291,11 +289,12 @@ class QManager(object):
                             prev_att_vector=prev_att_vector,
                             unroll_steps=1)
                         # logits: batch x time=1 x vocab (logits)
-                        # if t != 0:
-                        if self.state_type == 'hidden':
-                            state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                        else:
-                            state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
+
+                        if t != 0:
+                            if self.state_type == 'hidden':
+                                state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                            else:
+                                state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
 
                         # if t == 0:
                         #     print('states0: ', state, state_)
@@ -315,7 +314,8 @@ class QManager(object):
                         if t < trg_input.size - 1:
                             a_ = trg_input[t+1]
                         else:
-                            a_ = 0
+                            # possible change depending on the token to mark the end
+                            a_ = self.eos_index
 
                         #a = next_word.squeeze(1).detach().cpu().numpy()[0]
 
@@ -333,15 +333,31 @@ class QManager(object):
                         # check if previous symbol was <eos>
                         is_eos = torch.eq(next_word, self.eos_index)
                         finished += is_eos
-                        #if t != 0:
-                        self.memory_counter += 1
-                        tup = (self.memory_counter, state, a, state_, a_, is_eos[0,0])
-                        exp_list.append(tup)
-
+                        if t != 0:
+                            tup = (self.memory_counter, state, a, state_, a_, 1)
+                            exp_list.append(tup)
+                            self.memory_counter += 1
+                        #print(t)
 
                         # stop predicting if <eos> reached for all elements in batch
                         if (finished >= 1).sum() == batch_size:
+                            a = next_word.squeeze(1).detach().cpu().numpy()[0]
+                            #tup = (self.memory_counter, state_, a, np.zeros([self.state_size]) , a_, is_eos[0,0])
+                            tup = (self.memory_counter, state_, a, np.zeros([self.state_size]), a_,  0)
+                            exp_list.append(tup)
+                            self.memory_counter += 1
+                            #print('break')
                             break
+                        if t == self.max_output_length-1:
+                            #print("reach the max output")
+                            a = 0
+                            #tup = (self.memory_counter, state_, a, np.zeros([self.state_size]) , a_, is_eos[0,0])
+                            tup = (self.memory_counter, state_, a, -1*np.ones([self.state_size]), a_, 0)
+                            exp_list.append(tup)
+                            self.memory_counter += 1
+                            
+                        
+                            
                     
                     #Collecting rewards
                     hyp = np.stack(output, axis=1)  # batch, time
@@ -392,6 +408,7 @@ class QManager(object):
             
             current_bleu = self.dev_network()
             print("Current Bleu score is: ", current_bleu)
+
             
         self.learn_step_counter += 1
 
@@ -410,7 +427,7 @@ class QManager(object):
 
         b_is_eos = torch.FloatTensor(b_memory[:, self.size_memory1-1:]).view(self.sample_size, 1)
         #print(b_a, b_a.size)
-        
+        #print(b_is_eos)
         #Activate the eval_net
         unfreeze_model(self.eval_net)
         
@@ -420,10 +437,14 @@ class QManager(object):
         # taking the most likely action.
         # use the hyperparameter nu_pretrain to take the true action
         # or the one take from the one computed from the q_target
-        if self.learn_step_counter < self.nu_pretrain:
+        if self.dev_network_count < self.nu_pretrain:
             #print ("Using pretraining...")
+
             b_a_ = torch.LongTensor(b_memory[:, self.state_size+2 + self.state_size]).view(self.sample_size, 1)
         else:
+            if self.dev_network_count == self.nu_pretrain:
+                print ("Starting using Q target net....")
+
             b_a_ = torch.LongTensor(q_next.max(1)[1].view(self.sample_size, 1).long())
         #b_a_ = q_next.max(1)[0].view(self.sample_size, 1).long()   # shape (batch, 1)
         q_eval_next = self.eval_net(b_s_).gather(1, b_a_)   # shape (batch, 1)
@@ -454,13 +475,20 @@ class QManager(object):
         :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
         :param rew: rewards for every experince. Of lenght of the hypotesis        
         """
+
+        if len(exp_list) != len(rew):
+            print(' exp_list: ', exp_list)
+            print(' rew: ', rew)
+            
+
         assert (len(exp_list) == len(rew) )
         for i, ele in enumerate(exp_list):
             index, state, a, state_, a_, is_eos  = ele
             index = index % self.mem_cap
             
             r = rew[i]
-            transition = np.hstack((state, [a, r], state_, a_, np.invert(is_eos)))
+            transition = np.hstack((state, [a, r], state_, a_,  is_eos))
+
             self.memory[index, :] = transition
 
 
@@ -518,6 +546,9 @@ class QManager(object):
                 current_valid_score *= discount_ini_token
             if t > len(trg[0]):
                 current_valid_score *= discount_fin_token
+
+            if t > self.max_output_length-1:
+                current_valid_score = -10
             # if show:
             #     print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
             #     print("Target: ", trg, decoded_valid_tar, valid_references)
