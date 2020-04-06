@@ -292,8 +292,6 @@ class QManager(object):
                                 state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
 
 
-                                
-
                         # decode one single step
                         logits, hidden, att_probs, prev_att_vector = self.model.decoder(
                             encoder_output=encoder_output,
@@ -512,7 +510,7 @@ class QManager(object):
 
     def Reward_bleu_diff(self, trg, hyp, show = False):
         """
-        To use as self.Reward funtion.
+        To use as self.Reward function.
         Return an array of rewards, based on the differences
         of current Blue Score. As proposed on paper.
 
@@ -525,14 +523,14 @@ class QManager(object):
 
         smooth = 0.001
         rew = np.zeros([len(hyp[0])])
-        # print('aa',len(hyp[0]))
+        #print('len(hyp[0]) = ',len(hyp[0]))
         discount_ini_token = 1
         discount_fin_token = 1
-        if trg[0,0] != hyp[0,0]:
+        #if trg[0,0] != hyp[0,0]:
             #print(trg, hyp)
-            discount_ini_token = 0.5
-        if len(hyp[0]) > len(trg[0]):
-            discount_ini_token = 0.5
+            #discount_ini_token = 0.5
+        #if len(hyp[0]) > len(trg[0]):
+            #discount_fin_token = 0.5
 
 
         for t in np.arange(len(hyp[0])-1):
@@ -560,13 +558,17 @@ class QManager(object):
             current_valid_score = sacrebleu.corpus_bleu(valid_hypotheses[0]
                 , valid_references[0], smooth_method='floor', smooth_value=smooth
                 , use_effective_order=True).score
-            if t == 0:
-                current_valid_score *= discount_ini_token
-            if t > len(trg[0]):
-                current_valid_score *= discount_fin_token
 
-            if t > self.max_output_length-1:
-                current_valid_score = -10
+            #print ("t = ", t)
+            #print ("current_valid_score = ", current_valid_score)
+            #if t == 0:
+            #    current_valid_score *= discount_ini_token
+         #   if t > len(trg[0]):
+                #current_valid_score *= discount_fin_token
+         #       current_valid_score -= 10*t
+
+          #  if t > self.max_output_length-1:
+          #      current_valid_score = -10
             # if show:
             #     print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
             #     print("Target: ", trg, decoded_valid_tar, valid_references)
@@ -579,7 +581,13 @@ class QManager(object):
             print('rew: ', rew)
 
         rew[:-1] = np.diff(rew)
-        final_rew = rew  
+        final_rew = rew
+
+        #if len(hyp[0]) == self.max_output_length:
+        #    final_rew[-1] = -10
+
+        #final_rew[-1] = final_rew[-1] / len(hyp[0])
+
         # final_rew = np.zeros(len(hyp[0]))
         # final_rew[0] = r_1
         # #print(rew)
@@ -590,6 +598,7 @@ class QManager(object):
             print("Eval  : ", hyp, decoded_valid_hyp)
             print("Reward: ", final_rew, "\n")
 
+        #print ("shape final_rew = ", final_rew.shape)
         return final_rew
 
     def Reward_lin(self, trg, hyp, show = False):
@@ -691,7 +700,10 @@ class QManager(object):
         :param show: Boolean, display the computation of the rewards
         :return: current Bleu score
         """
-        rew = np.zeros(len(hyp[0]))
+        smooth = 0.001
+        final_rew = np.zeros(len(hyp[0]))
+
+        #print ("len hyp[0] = ", len(hyp[0]))
 
         decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg,
                                                     cut_at_eos=True)
@@ -713,30 +725,33 @@ class QManager(object):
         if valid_references:
             assert len(valid_hypotheses) == len(valid_references)
 
-            current_valid_score = 0
-            if self.eval_metric.lower() == 'bleu':
-                # this version does not use any tokenization
-                #print(' aaa ')
-                current_valid_score = bleu(valid_hypotheses, valid_references)
-            elif self.eval_metric.lower() == 'chrf':
-                current_valid_score = chrf(valid_hypotheses, valid_references)
-            elif self.eval_metric.lower() == 'token_accuracy':
-                current_valid_score = token_accuracy(
-                    valid_hypotheses, valid_references, level=self.level)
-            elif self.eval_metric.lower() == 'sequence_accuracy':
-                current_valid_score = sequence_accuracy(
-                    valid_hypotheses, valid_references)
+        #     current_valid_score = 0
+        #     if self.eval_metric.lower() == 'bleu':
+        #         # this version does not use any tokenization
+        #         #print(' aaa ')
+        #         current_valid_score = bleu(valid_hypotheses, valid_references)
+        #     elif self.eval_metric.lower() == 'chrf':
+        #         current_valid_score = chrf(valid_hypotheses, valid_references)
+        #     elif self.eval_metric.lower() == 'token_accuracy':
+        #         current_valid_score = token_accuracy(
+        #             valid_hypotheses, valid_references, level=self.level)
+        #     elif self.eval_metric.lower() == 'sequence_accuracy':
+        #         current_valid_score = sequence_accuracy(
+        #             valid_hypotheses, valid_references)
         else:
             current_valid_score = -1
-            
-        rew[-1] = current_valid_score
-        
-        final_rew = rew[1:]
+
+        current_valid_score = sacrebleu.corpus_bleu(valid_hypotheses[0]
+                                                    , valid_references[0], smooth_method='floor', smooth_value=smooth
+                                                    , use_effective_order=True).score
+        final_rew[-1] = current_valid_score
+
         if show:
             print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
             print("Target: ", trg, decoded_valid_tar)
             print("Eval  : ", hyp, decoded_valid_hyp)
             print("Reward: ", final_rew, "\n")
+        #print ("final_rew shape = ", final_rew.shape)
 
         return final_rew
 
@@ -839,7 +854,8 @@ class QManager(object):
 
                 r = self.Reward(batch.trg, hyp , show = False)
                 
-                if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                #if i_sample == 0 or i_sample == 3 or i_sample == 6:
+                if i_sample < 10:
                     print("\n Sample ", i_sample, "-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
                     print("Target: ", batch.trg, decoded_valid_out_trg)
                     print("Eval  : ", stacked_output, decoded_valid_out, "\n")

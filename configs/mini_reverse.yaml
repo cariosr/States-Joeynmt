@@ -42,7 +42,7 @@ training:
     overwrite: True
     shuffle: True
     use_cuda: False
-    max_output_length: 30
+    max_output_length: 10
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
 
@@ -75,7 +75,7 @@ model:
         init_hidden: "bridge"
         attention: "luong"
 dqn:
-    epochs: 100
+    epochs: 2000
     sample_size: 256
     lr: 0.01
     egreed_max: 0.9
@@ -88,3 +88,4 @@ dqn:
     beam_max: 50
     state_type: 'hidden'
     reward_type: 'bleu_diff'
+    nu_pretrain: 2000
