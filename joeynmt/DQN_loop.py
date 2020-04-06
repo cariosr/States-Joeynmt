@@ -19,6 +19,8 @@ from joeynmt.metrics import bleu, chrf, token_accuracy, sequence_accuracy
 import random
 from torch.utils.tensorboard import SummaryWriter
 import sacrebleu
+import time
+import datetime
 
 def freeze_model(model):
     model.eval()
@@ -122,6 +124,7 @@ class QManager(object):
         self.beam_max = cfg["dqn"]["beam_max"]
         self.state_type = cfg["dqn"]["state_type"]
         self.nu_pretrain = cfg["dqn"]["nu_pretrain"]
+        self.reward_type = cfg["dqn"]["reward_type"]
 
         if self.state_type == 'hidden':
             self.state_size = cfg["model"]["encoder"]["hidden_size"]*2
@@ -177,17 +180,29 @@ class QManager(object):
         beam_size = 1
         beam_alpha = -1
 
+        # get the current date to write the folder for tensorboard
+        time_stamp = time.time()
+        date = datetime.datetime.fromtimestamp(time_stamp).strftime('%Y-%m-%d %H:%M:%S')
+
+        # get the hyperparameters more relevant
+        # add as many hyperparameters as desired in the following manner:
+        # -write the name of the hyperparameter at front then the value
+        # -write underscore after each hyperparameter, except for the latest one
+
+        relevant_hyp = "nu_pretrain=" + str(self.nu_pretrain) + "_" + "reward_type=" + str(self.reward_type)
+
         #others not important parameters
         self.index_fin = None
-        path_tensroboard = self.model_dir + "/tensorboard_DQN/"
+        # construct the name of the folder for tensorboard for the test given the date and the relevant_hyp
+        path_tensroboard = self.model_dir + "/tensorboard_DQN/" + date + "/" + relevant_hyp + "/"
         self.tb_writer = SummaryWriter( log_dir=path_tensroboard , purge_step=0)
         self.dev_network_count = 0
-        print(cfg["dqn"]["reward_type"])
+        print(self.reward_type)
         #Reward funtion related:
-        if cfg["dqn"]["reward_type"] == "bleu_diff" : 
+        if self.reward_type == "bleu_diff" :
             print("You select the reward based on the Bleu score differences")
             self.Reward = self.Reward_bleu_diff
-        elif cfg["dqn"]["reward_type"] == "bleu_lin" : 
+        elif self.reward_type == "bleu_lin" :
             print("You select the reward based on the linear Bleu socres, and several punishments")
             self.Reward = self.Reward_lin
         else:
