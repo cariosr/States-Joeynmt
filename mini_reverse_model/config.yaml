@@ -1,4 +1,4 @@
-name: "mini_reverse_model"
+name: "reverse_experiment"
 
 data:
     src: "src"
@@ -34,7 +34,7 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 50
+    epochs: 10
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
@@ -42,7 +42,7 @@ training:
     overwrite: True
     shuffle: True
     use_cuda: False
-    max_output_length: 30
+    max_output_length: 10
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
 
@@ -58,7 +58,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 64
+        hidden_size: 24
         bidirectional: True
         dropout: 0.1
         num_layers: 1
@@ -67,7 +67,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 64
+        hidden_size: 24
         dropout: 0.1
         hidden_dropout: 0.1
         num_layers: 1
@@ -77,7 +77,7 @@ model:
 dqn:
     epochs: 2000
     sample_size: 256
-    lr: 0.01
+    lr: 0.001
     egreed_max: 0.9
     egreed_min: 0.001
     gamma_max: 0.9
@@ -86,5 +86,6 @@ dqn:
     mem_cap: 5000
     beam_min: 1
     beam_max: 50
-    state_type: 'hidden'
-    reward_type: 'bleu_diff'
+    state_type: 'attention'
+    reward_type: 'bleu_seq'
+    nu_pretrain: 1000
