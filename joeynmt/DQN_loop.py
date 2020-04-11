@@ -128,6 +128,8 @@ class QManager(object):
         self.nu_pretrain = cfg["dqn"]["nu_pretrain"]
         self.reward_type = cfg["dqn"]["reward_type"]
 
+        self.count_post_pre_train = 0
+
         if self.state_type == 'hidden':
             self.state_size = cfg["model"]["encoder"]["hidden_size"]*2
         else:
@@ -191,7 +193,7 @@ class QManager(object):
         # -write the name of the hyperparameter at front then the value
         # -write underscore after each hyperparameter, except for the latest one
 
-        relevant_hyp = "nu_pretrain=" + str(self.nu_pretrain) + "_" + "reward_type=" + str(self.reward_type)
+        relevant_hyp = "nu_pretrain=" + str(self.nu_pretrain) + "_" + "reward_type=" + str(self.reward_type) + cfg["dqn"]["other_descrip"]
 
         #others not important parameters
         self.index_fin = None
@@ -234,33 +236,30 @@ class QManager(object):
             #beam_dqn = self.beam_min + int(self.beam_max * epoch_no/self.epochs)
             #egreed = self.egreed_max*(1 - epoch_no/(1.1*self.epochs))
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
+            # keep the beam_dqn = 1, otherwise is harmfull to the learning
+            beam_dqn = 1
+            if self.learn_step_counter < self.nu_pretrain:
+                # print("On the pretrain of the Q target network. The beam_dqn =1.")
+                # beam_dqn = 1
+                egreed = self.egreed_max
+                self.gamma = (self.gamma_min + self.gamma_max)/2
+            else:
+                self.count_post_pre_train += 1
+                #beam_dqn = int(beam_dqn*math.pow(1.05,self.count_post_pre_train))
+                egreed = egreed*0.97
+                self.gamma = self.gamma_min*math.pow(1.05,self.count_post_pre_train)
 
-            #beam_dqn = 10
-
-            beam_dqn = epoch_no+1
-            
-            if self.nu_pretrain != -1:
-                if self.dev_network_count < self.nu_pretrain:
-                    print("On the pretrain of the Q target network. The beam_dqn =1.")
-                    beam_dqn = 1
-
-            
-            egreed = math.pow(0.9,epoch_no+1)
-            if egreed < self.egreed_min:
-                egreed = self.egreed_min
-            #egreed = 0.5
-            #self.gamma = self.gamma_max
-            self.gamma = math.pow(0.9,epoch_no+1)
-            if self.gamma < self.gamma_min:
-                self.gamma = self.gamma_min
-            
-            #self.gamma = 0.6
-            if beam_dqn > self.actions_size:
-                print("The beam_dqn cannot exceed the action size!")
-                print("then the beam_dqn = action size")
-                beam_dqn = self.actions_size
-
-
+                if egreed < self.egreed_min:
+                    egreed = self.egreed_min
+                
+                if self.gamma > self.gamma_max:
+                    self.gamma = self.gamma_max
+                
+                # if beam_dqn > self.actions_size:
+                #     print("The beam_dqn cannot exceed the action size!")
+                #     print("then the beam_dqn = action size")
+                #     beam_dqn = self.actions_size - 1
+    
             self.tb_writer.add_scalar("parameters/beam_dqn",
                                               beam_dqn, epoch_no)
             self.tb_writer.add_scalar("parameters/egreed",
@@ -770,20 +769,73 @@ class QManager(object):
         bolles = trg_b[:] == hyp[0,:]
 
         bolles = bolles*np.ones(len(trg_b)) + np.zeros(len(trg_b))
-        #To punish the long seq
+        
+        # Punisment to longer or shorter hyp than trg
+        def fac_long_punish(x, len_tran):
+            return -np.abs(-(x/len_tran) +1)
+
+        # #*1* selective, if hyp, behaves well. No punish. Otherwise Triangle profile punish. 
+        # #To fit on the diff computation idea.
+        # final_rew = bolles*np.arange(1,len(trg_b)+1)
+        # fac_long = None
+        # if len(hyp[0]) != (len(trg[0])+1):
+        #     fac_long = 0.2*fac_long_punish(np.arange(1,len(hyp[0])), len(trg[0]))
+        # else:
+        #     fac_long = np.zeros(len(hyp[0])-1)
+        # final_rew = np.diff(final_rew) + fac_long
+
+        # #*2* Triangle profile punish. 
+        # #To fit on the diff computation idea.
+        # final_rew = bolles*np.arange(1,len(trg_b)+1)
+        # fac_long = 0.2*fac_long_punish(np.arange(1,len(hyp[0])), len(trg[0]))
+        # final_rew = np.diff(final_rew) + fac_long
+               
+        
+        # #*3* Start the punishment as len(hyp) becomes larger than len(trg)
+        # #To fit on the diff computation idea.
+        # final_rew = bolles*np.arange(1,len(trg_b)+1)
+        # fac_long = np.zeros(len(hyp[0])-1)
+        # fac_long[len(trg[0]):] = 0.2*fac_long_punish(np.arange(1,len(hyp[0])), len(trg[0]))[len(trg[0]):]
+        # final_rew = np.diff(final_rew) + fac_long
+        
+        #*4*original* Punish increas as the len increase. The best so far!
+        #To fit on the diff computation idea.
         final_rew = bolles*np.arange(1,len(trg_b)+1)
         final_rew = np.diff(final_rew) -np.arange(len(hyp[0])-1)*0.2
 
-        # #To punish the worng desitions
-        # for i in np.arange(1,len(final_rew)):
-        #     final_rew[i] = (final_rew[i]+final_rew[i-1])/2
+        # #*5* 
+        # #Another idea to fit on the diff computation idea.
+        # final_rew = np.zeros(len(trg_b))
+        # for i in np.arange(len(trg_b)):
+        #     final_rew[i] = np.sum(bolles[:i])
+        # final_rew = np.diff(final_rew) -np.arange(len(hyp[0])-1)*0.2
 
-        final_rew[np.where(final_rew < 0)] = 2*final_rew[np.where(final_rew < 0)]
+        
+
+        #To punish the wrong desitions, but the last one (to avoid the large hyp)
+        for i in np.arange(1,len(final_rew)-1):
+            final_rew[i] = (final_rew[i]+final_rew[i-1])/2.0
+
+        # #*4_1* Include the original **
+        # # Penalizing the second token when goes worng:
+        if len(hyp[0]) > 2:
+            if trg_b[1] != hyp[0,1] and trg_b[2] == hyp[0,2]:
+                final_rew[1] = final_rew[1]*0.5
+    
+        # #*4_2* Include the original **
+        # # Penalizing the when the token before goes worng:
+        # for i in np.arange(1,len(final_rew)):
+        #     if trg_b[i] != hyp[0,i] and trg_b[i+1] == hyp[0,i+1]:
+        #             final_rew[i] *= 1/len(final_rew[:i])
+
+
+        #final_rew[np.where(final_rew < 0)] = 2*final_rew[np.where(final_rew < 0)]
         if show:
             print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
             print("Target: ", trg_b)
             print("Eval  : ", hyp)
             print("Reward: ", final_rew, "\n")
+            print(trg, trg_a)
         return final_rew
 
 

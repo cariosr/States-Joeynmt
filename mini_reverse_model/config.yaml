@@ -88,4 +88,5 @@ dqn:
     beam_max: 50
     state_type: 'attention'
     reward_type: 'bleu_seq'
-    nu_pretrain: 1000
+    nu_pretrain: 500
+    other_descrip: '_exp_4_1_'
