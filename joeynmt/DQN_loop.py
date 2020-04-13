@@ -246,14 +246,14 @@ class QManager(object):
             else:
                 self.count_post_pre_train += 1
                 #beam_dqn = int(beam_dqn*math.pow(1.05,self.count_post_pre_train))
-                egreed = egreed*0.97
-                self.gamma = self.gamma_min*math.pow(1.05,self.count_post_pre_train)
+                egreed = 0.0
+                self.gamma = self.gamma_max*math.pow(0.999, self.count_post_pre_train)
 
                 if egreed < self.egreed_min:
                     egreed = self.egreed_min
                 
-                if self.gamma > self.gamma_max:
-                    self.gamma = self.gamma_max
+                if self.gamma < self.gamma_min:
+                    self.gamma = self.gamma_min
                 
                 # if beam_dqn > self.actions_size:
                 #     print("The beam_dqn cannot exceed the action size!")
@@ -816,7 +816,7 @@ class QManager(object):
         for i in np.arange(1,len(final_rew)-1):
             final_rew[i] = (final_rew[i]+final_rew[i-1])/2.0
 
-        # #*4_1* Include the original **
+        # #*4_1* Include the original ** Best so far (12/04/20). Better regret.
         # # Penalizing the second token when goes worng:
         if len(hyp[0]) > 2:
             if trg_b[1] != hyp[0,1] and trg_b[2] == hyp[0,2]:

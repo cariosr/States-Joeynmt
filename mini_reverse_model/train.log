@@ -1,1037 +1,496 @@
-2020-04-08 16:56:51,963 Hello! This is Joey-NMT.
-2020-04-08 16:56:51,965 Total params: 18984
-2020-04-08 16:56:51,966 Trainable parameters: ['decoder.att_vector_layer.bias', 'decoder.att_vector_layer.weight', 'decoder.attention.key_layer.weight', 'decoder.bridge_layer.bias', 'decoder.bridge_layer.weight', 'decoder.output_layer.weight', 'decoder.rnn.bias_hh_l0', 'decoder.rnn.bias_ih_l0', 'decoder.rnn.weight_hh_l0', 'decoder.rnn.weight_ih_l0', 'encoder.rnn.bias_hh_l0', 'encoder.rnn.bias_hh_l0_reverse', 'encoder.rnn.bias_ih_l0', 'encoder.rnn.bias_ih_l0_reverse', 'encoder.rnn.weight_hh_l0', 'encoder.rnn.weight_hh_l0_reverse', 'encoder.rnn.weight_ih_l0', 'encoder.rnn.weight_ih_l0_reverse', 'src_embed.lut.weight', 'trg_embed.lut.weight']
-2020-04-08 16:56:51,967 cfg.name                           : reverse_experiment
-2020-04-08 16:56:51,967 cfg.data.src                       : src
-2020-04-08 16:56:51,967 cfg.data.trg                       : trg
-2020-04-08 16:56:51,967 cfg.data.train                     : test/data/mini_reverse/train
-2020-04-08 16:56:51,967 cfg.data.dev                       : test/data/mini_reverse/dev
-2020-04-08 16:56:51,967 cfg.data.test                      : test/data/mini_reverse/test
-2020-04-08 16:56:51,967 cfg.data.level                     : word
-2020-04-08 16:56:51,968 cfg.data.lowercase                 : False
-2020-04-08 16:56:51,968 cfg.data.max_sent_length           : 25
-2020-04-08 16:56:51,968 cfg.data.src_voc_min_freq          : 0
-2020-04-08 16:56:51,968 cfg.data.src_voc_limit             : 100
-2020-04-08 16:56:51,968 cfg.data.trg_voc_min_freq          : 0
-2020-04-08 16:56:51,968 cfg.data.trg_voc_limit             : 100
-2020-04-08 16:56:51,968 cfg.testing.beam_size              : 1
-2020-04-08 16:56:51,968 cfg.testing.alpha                  : 1.0
-2020-04-08 16:56:51,968 cfg.training.random_seed           : 42
-2020-04-08 16:56:51,968 cfg.training.optimizer             : adam
-2020-04-08 16:56:51,969 cfg.training.learning_rate         : 0.001
-2020-04-08 16:56:51,969 cfg.training.learning_rate_min     : 0.0002
-2020-04-08 16:56:51,969 cfg.training.weight_decay          : 0.0
-2020-04-08 16:56:51,969 cfg.training.clip_grad_norm        : 1.0
-2020-04-08 16:56:51,969 cfg.training.batch_size            : 10
-2020-04-08 16:56:51,969 cfg.training.batch_type            : sentence
-2020-04-08 16:56:51,969 cfg.training.scheduling            : plateau
-2020-04-08 16:56:51,969 cfg.training.patience              : 5
-2020-04-08 16:56:51,969 cfg.training.decrease_factor       : 0.5
-2020-04-08 16:56:51,969 cfg.training.early_stopping_metric : eval_metric
-2020-04-08 16:56:51,970 cfg.training.epochs                : 10
-2020-04-08 16:56:51,970 cfg.training.validation_freq       : 10
-2020-04-08 16:56:51,970 cfg.training.logging_freq          : 10
-2020-04-08 16:56:51,970 cfg.training.eval_metric           : bleu
-2020-04-08 16:56:51,970 cfg.training.model_dir             : mini_reverse_model
-2020-04-08 16:56:51,970 cfg.training.overwrite             : True
-2020-04-08 16:56:51,970 cfg.training.shuffle               : True
-2020-04-08 16:56:51,970 cfg.training.use_cuda              : False
-2020-04-08 16:56:51,970 cfg.training.max_output_length     : 10
-2020-04-08 16:56:51,971 cfg.training.print_valid_sents     : [0, 3, 6]
-2020-04-08 16:56:51,971 cfg.training.keep_last_ckpts       : 2
-2020-04-08 16:56:51,971 cfg.model.initializer              : xavier
-2020-04-08 16:56:51,971 cfg.model.embed_initializer        : normal
-2020-04-08 16:56:51,971 cfg.model.embed_init_weight        : 0.1
-2020-04-08 16:56:51,971 cfg.model.bias_initializer         : zeros
-2020-04-08 16:56:51,971 cfg.model.init_rnn_orthogonal      : False
-2020-04-08 16:56:51,971 cfg.model.lstm_forget_gate         : 0.0
-2020-04-08 16:56:51,971 cfg.model.encoder.rnn_type         : lstm
-2020-04-08 16:56:51,972 cfg.model.encoder.embeddings.embedding_dim : 16
-2020-04-08 16:56:51,972 cfg.model.encoder.embeddings.scale : False
-2020-04-08 16:56:51,972 cfg.model.encoder.hidden_size      : 24
-2020-04-08 16:56:51,972 cfg.model.encoder.bidirectional    : True
-2020-04-08 16:56:51,972 cfg.model.encoder.dropout          : 0.1
-2020-04-08 16:56:51,972 cfg.model.encoder.num_layers       : 1
-2020-04-08 16:56:51,972 cfg.model.decoder.rnn_type         : lstm
-2020-04-08 16:56:51,972 cfg.model.decoder.embeddings.embedding_dim : 16
-2020-04-08 16:56:51,973 cfg.model.decoder.embeddings.scale : False
-2020-04-08 16:56:51,973 cfg.model.decoder.hidden_size      : 24
-2020-04-08 16:56:51,973 cfg.model.decoder.dropout          : 0.1
-2020-04-08 16:56:51,973 cfg.model.decoder.hidden_dropout   : 0.1
-2020-04-08 16:56:51,973 cfg.model.decoder.num_layers       : 1
-2020-04-08 16:56:51,973 cfg.model.decoder.input_feeding    : True
-2020-04-08 16:56:51,973 cfg.model.decoder.init_hidden      : bridge
-2020-04-08 16:56:51,973 cfg.model.decoder.attention        : luong
-2020-04-08 16:56:51,973 cfg.dqn.epochs                     : 2000
-2020-04-08 16:56:51,974 cfg.dqn.sample_size                : 256
-2020-04-08 16:56:51,974 cfg.dqn.lr                         : 0.01
-2020-04-08 16:56:51,974 cfg.dqn.egreed_max                 : 0.9
-2020-04-08 16:56:51,974 cfg.dqn.egreed_min                 : 0.001
-2020-04-08 16:56:51,974 cfg.dqn.gamma_max                  : 0.9
-2020-04-08 16:56:51,974 cfg.dqn.gamma_min                  : 0.3
-2020-04-08 16:56:51,974 cfg.dqn.nu_iter                    : 300
-2020-04-08 16:56:51,974 cfg.dqn.mem_cap                    : 5000
-2020-04-08 16:56:51,975 cfg.dqn.beam_min                   : 1
-2020-04-08 16:56:51,975 cfg.dqn.beam_max                   : 50
-2020-04-08 16:56:51,975 cfg.dqn.state_type                 : attention
-2020-04-08 16:56:51,975 cfg.dqn.reward_type                : bleu_diff
-2020-04-08 16:56:51,975 cfg.dqn.nu_pretrain                : 40
-2020-04-08 16:56:51,975 Data set sizes: 
+2020-04-13 18:25:13,175 Hello! This is Joey-NMT.
+2020-04-13 18:25:13,178 Total params: 18984
+2020-04-13 18:25:13,179 Trainable parameters: ['decoder.att_vector_layer.bias', 'decoder.att_vector_layer.weight', 'decoder.attention.key_layer.weight', 'decoder.bridge_layer.bias', 'decoder.bridge_layer.weight', 'decoder.output_layer.weight', 'decoder.rnn.bias_hh_l0', 'decoder.rnn.bias_ih_l0', 'decoder.rnn.weight_hh_l0', 'decoder.rnn.weight_ih_l0', 'encoder.rnn.bias_hh_l0', 'encoder.rnn.bias_hh_l0_reverse', 'encoder.rnn.bias_ih_l0', 'encoder.rnn.bias_ih_l0_reverse', 'encoder.rnn.weight_hh_l0', 'encoder.rnn.weight_hh_l0_reverse', 'encoder.rnn.weight_ih_l0', 'encoder.rnn.weight_ih_l0_reverse', 'src_embed.lut.weight', 'trg_embed.lut.weight']
+2020-04-13 18:25:13,180 cfg.name                           : reverse_experiment
+2020-04-13 18:25:13,180 cfg.data.src                       : src
+2020-04-13 18:25:13,180 cfg.data.trg                       : trg
+2020-04-13 18:25:13,180 cfg.data.train                     : test/data/mini_reverse/train
+2020-04-13 18:25:13,181 cfg.data.dev                       : test/data/mini_reverse/dev
+2020-04-13 18:25:13,181 cfg.data.test                      : test/data/mini_reverse/test
+2020-04-13 18:25:13,181 cfg.data.level                     : word
+2020-04-13 18:25:13,181 cfg.data.lowercase                 : False
+2020-04-13 18:25:13,181 cfg.data.max_sent_length           : 25
+2020-04-13 18:25:13,181 cfg.data.src_voc_min_freq          : 0
+2020-04-13 18:25:13,181 cfg.data.src_voc_limit             : 100
+2020-04-13 18:25:13,181 cfg.data.trg_voc_min_freq          : 0
+2020-04-13 18:25:13,181 cfg.data.trg_voc_limit             : 100
+2020-04-13 18:25:13,181 cfg.testing.beam_size              : 1
+2020-04-13 18:25:13,181 cfg.testing.alpha                  : 1.0
+2020-04-13 18:25:13,181 cfg.training.random_seed           : 42
+2020-04-13 18:25:13,182 cfg.training.optimizer             : adam
+2020-04-13 18:25:13,182 cfg.training.learning_rate         : 0.001
+2020-04-13 18:25:13,182 cfg.training.learning_rate_min     : 0.0002
+2020-04-13 18:25:13,182 cfg.training.weight_decay          : 0.0
+2020-04-13 18:25:13,182 cfg.training.clip_grad_norm        : 1.0
+2020-04-13 18:25:13,182 cfg.training.batch_size            : 10
+2020-04-13 18:25:13,182 cfg.training.batch_type            : sentence
+2020-04-13 18:25:13,182 cfg.training.scheduling            : plateau
+2020-04-13 18:25:13,182 cfg.training.patience              : 5
+2020-04-13 18:25:13,182 cfg.training.decrease_factor       : 0.5
+2020-04-13 18:25:13,182 cfg.training.early_stopping_metric : eval_metric
+2020-04-13 18:25:13,183 cfg.training.epochs                : 10
+2020-04-13 18:25:13,183 cfg.training.validation_freq       : 10
+2020-04-13 18:25:13,183 cfg.training.logging_freq          : 10
+2020-04-13 18:25:13,183 cfg.training.eval_metric           : bleu
+2020-04-13 18:25:13,183 cfg.training.model_dir             : mini_reverse_model
+2020-04-13 18:25:13,183 cfg.training.overwrite             : True
+2020-04-13 18:25:13,183 cfg.training.shuffle               : True
+2020-04-13 18:25:13,183 cfg.training.use_cuda              : False
+2020-04-13 18:25:13,183 cfg.training.max_output_length     : 10
+2020-04-13 18:25:13,184 cfg.training.print_valid_sents     : [0, 3, 6]
+2020-04-13 18:25:13,184 cfg.training.keep_last_ckpts       : 2
+2020-04-13 18:25:13,184 cfg.model.initializer              : xavier
+2020-04-13 18:25:13,184 cfg.model.embed_initializer        : normal
+2020-04-13 18:25:13,184 cfg.model.embed_init_weight        : 0.1
+2020-04-13 18:25:13,184 cfg.model.bias_initializer         : zeros
+2020-04-13 18:25:13,184 cfg.model.init_rnn_orthogonal      : False
+2020-04-13 18:25:13,184 cfg.model.lstm_forget_gate         : 0.0
+2020-04-13 18:25:13,184 cfg.model.encoder.rnn_type         : lstm
+2020-04-13 18:25:13,184 cfg.model.encoder.embeddings.embedding_dim : 16
+2020-04-13 18:25:13,185 cfg.model.encoder.embeddings.scale : False
+2020-04-13 18:25:13,185 cfg.model.encoder.hidden_size      : 24
+2020-04-13 18:25:13,185 cfg.model.encoder.bidirectional    : True
+2020-04-13 18:25:13,185 cfg.model.encoder.dropout          : 0.1
+2020-04-13 18:25:13,185 cfg.model.encoder.num_layers       : 1
+2020-04-13 18:25:13,185 cfg.model.decoder.rnn_type         : lstm
+2020-04-13 18:25:13,185 cfg.model.decoder.embeddings.embedding_dim : 16
+2020-04-13 18:25:13,185 cfg.model.decoder.embeddings.scale : False
+2020-04-13 18:25:13,185 cfg.model.decoder.hidden_size      : 24
+2020-04-13 18:25:13,186 cfg.model.decoder.dropout          : 0.1
+2020-04-13 18:25:13,186 cfg.model.decoder.hidden_dropout   : 0.1
+2020-04-13 18:25:13,186 cfg.model.decoder.num_layers       : 1
+2020-04-13 18:25:13,186 cfg.model.decoder.input_feeding    : True
+2020-04-13 18:25:13,186 cfg.model.decoder.init_hidden      : bridge
+2020-04-13 18:25:13,186 cfg.model.decoder.attention        : luong
+2020-04-13 18:25:13,186 cfg.dqn.epochs                     : 2000
+2020-04-13 18:25:13,186 cfg.dqn.sample_size                : 256
+2020-04-13 18:25:13,186 cfg.dqn.lr                         : 0.01
+2020-04-13 18:25:13,187 cfg.dqn.egreed_max                 : 0.9
+2020-04-13 18:25:13,187 cfg.dqn.egreed_min                 : 0.001
+2020-04-13 18:25:13,187 cfg.dqn.gamma_max                  : 0.9
+2020-04-13 18:25:13,187 cfg.dqn.gamma_min                  : 0.3
+2020-04-13 18:25:13,187 cfg.dqn.nu_iter                    : 300
+2020-04-13 18:25:13,187 cfg.dqn.mem_cap                    : 5000
+2020-04-13 18:25:13,187 cfg.dqn.beam_min                   : 1
+2020-04-13 18:25:13,187 cfg.dqn.beam_max                   : 50
+2020-04-13 18:25:13,187 cfg.dqn.state_type                 : attention
+2020-04-13 18:25:13,188 cfg.dqn.reward_type                : bleu_diff
+2020-04-13 18:25:13,188 cfg.dqn.nu_pretrain                : 40
+2020-04-13 18:25:13,188 Data set sizes: 
 	train 1000,
-	valid 100,
+	valid 103,
 	test 100
-2020-04-08 16:56:51,975 First training example:
+2020-04-13 18:25:13,188 First training example:
 	[SRC] 3
 	[TRG] 3
-2020-04-08 16:56:51,975 First 10 words (src): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 1 (5) 0 (6) 4 (7) 3 (8) 2
-2020-04-08 16:56:51,976 First 10 words (trg): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 1 (5) 0 (6) 4 (7) 3 (8) 2
-2020-04-08 16:56:51,976 Number of Src words (types): 9
-2020-04-08 16:56:51,976 Number of Trg words (types): 9
-2020-04-08 16:56:51,976 Model(
+2020-04-13 18:25:13,188 First 10 words (src): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 1 (5) 0 (6) 4 (7) 3 (8) 2
+2020-04-13 18:25:13,188 First 10 words (trg): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 1 (5) 0 (6) 4 (7) 3 (8) 2
+2020-04-13 18:25:13,188 Number of Src words (types): 9
+2020-04-13 18:25:13,189 Number of Trg words (types): 9
+2020-04-13 18:25:13,189 Model(
 	encoder=RecurrentEncoder(LSTM(16, 24, batch_first=True, bidirectional=True)),
 	decoder=RecurrentDecoder(rnn=LSTM(40, 24, batch_first=True), attention=LuongAttention),
 	src_embed=Embeddings(embedding_dim=16, vocab_size=9),
 	trg_embed=Embeddings(embedding_dim=16, vocab_size=9))
-2020-04-08 16:56:51,976 EPOCH 1
-2020-04-08 16:56:52,134 Epoch   1 Step:       10 Batch Loss:     6.441356 Tokens per Sec:     1655, Lr: 0.001000
-2020-04-08 16:56:52,253 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:56:52,253 Saving new checkpoint.
-2020-04-08 16:56:52,258 Example #0
-2020-04-08 16:56:52,258 	Raw source:     ['4', '3']
-2020-04-08 16:56:52,258 	Raw hypothesis: ['4']
-2020-04-08 16:56:52,259 	Source:     4 3
-2020-04-08 16:56:52,259 	Reference:  3 4
-2020-04-08 16:56:52,259 	Hypothesis: 4
-2020-04-08 16:56:52,259 Example #3
-2020-04-08 16:56:52,259 	Raw source:     ['4']
-2020-04-08 16:56:52,259 	Raw hypothesis: ['4']
-2020-04-08 16:56:52,259 	Source:     4
-2020-04-08 16:56:52,259 	Reference:  4
-2020-04-08 16:56:52,259 	Hypothesis: 4
-2020-04-08 16:56:52,260 Example #6
-2020-04-08 16:56:52,260 	Raw source:     ['3']
-2020-04-08 16:56:52,260 	Raw hypothesis: []
-2020-04-08 16:56:52,260 	Source:     3
-2020-04-08 16:56:52,260 	Reference:  3
-2020-04-08 16:56:52,260 	Hypothesis: 
-2020-04-08 16:56:52,260 Validation result (greedy) at epoch   1, step       10: bleu:   0.00, loss: 530.7219, ppl:   8.2849, duration: 0.1260s
-2020-04-08 16:56:52,953 Epoch   1 Step:       20 Batch Loss:     3.992671 Tokens per Sec:      375, Lr: 0.001000
-2020-04-08 16:56:53,033 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:56:53,033 Saving new checkpoint.
-2020-04-08 16:56:53,038 Example #0
-2020-04-08 16:56:53,038 	Raw source:     ['4', '3']
-2020-04-08 16:56:53,039 	Raw hypothesis: []
-2020-04-08 16:56:53,039 	Source:     4 3
-2020-04-08 16:56:53,039 	Reference:  3 4
-2020-04-08 16:56:53,039 	Hypothesis: 
-2020-04-08 16:56:53,039 Example #3
-2020-04-08 16:56:53,039 	Raw source:     ['4']
-2020-04-08 16:56:53,039 	Raw hypothesis: []
-2020-04-08 16:56:53,039 	Source:     4
-2020-04-08 16:56:53,039 	Reference:  4
-2020-04-08 16:56:53,039 	Hypothesis: 
-2020-04-08 16:56:53,040 Example #6
-2020-04-08 16:56:53,040 	Raw source:     ['3']
-2020-04-08 16:56:53,040 	Raw hypothesis: []
-2020-04-08 16:56:53,040 	Source:     3
-2020-04-08 16:56:53,040 	Reference:  3
-2020-04-08 16:56:53,040 	Hypothesis: 
-2020-04-08 16:56:53,040 Validation result (greedy) at epoch   1, step       20: bleu:   0.00, loss: 504.4113, ppl:   7.4604, duration: 0.0868s
-2020-04-08 16:56:53,485 Epoch   1 Step:       30 Batch Loss:     5.561986 Tokens per Sec:      517, Lr: 0.001000
-2020-04-08 16:56:53,561 Example #0
-2020-04-08 16:56:53,561 	Raw source:     ['4', '3']
-2020-04-08 16:56:53,561 	Raw hypothesis: []
-2020-04-08 16:56:53,562 	Source:     4 3
-2020-04-08 16:56:53,562 	Reference:  3 4
-2020-04-08 16:56:53,562 	Hypothesis: 
-2020-04-08 16:56:53,562 Example #3
-2020-04-08 16:56:53,562 	Raw source:     ['4']
-2020-04-08 16:56:53,562 	Raw hypothesis: []
-2020-04-08 16:56:53,562 	Source:     4
-2020-04-08 16:56:53,563 	Reference:  4
-2020-04-08 16:56:53,563 	Hypothesis: 
-2020-04-08 16:56:53,563 Example #6
-2020-04-08 16:56:53,563 	Raw source:     ['3']
-2020-04-08 16:56:53,563 	Raw hypothesis: []
-2020-04-08 16:56:53,563 	Source:     3
-2020-04-08 16:56:53,563 	Reference:  3
-2020-04-08 16:56:53,563 	Hypothesis: 
-2020-04-08 16:56:53,563 Validation result (greedy) at epoch   1, step       30: bleu:   0.00, loss: 463.4095, ppl:   6.3360, duration: 0.0783s
-2020-04-08 16:56:54,221 Epoch   1 Step:       40 Batch Loss:     5.413701 Tokens per Sec:      411, Lr: 0.001000
-2020-04-08 16:56:54,392 Example #0
-2020-04-08 16:56:54,392 	Raw source:     ['4', '3']
-2020-04-08 16:56:54,392 	Raw hypothesis: []
-2020-04-08 16:56:54,392 	Source:     4 3
-2020-04-08 16:56:54,393 	Reference:  3 4
-2020-04-08 16:56:54,393 	Hypothesis: 
-2020-04-08 16:56:54,393 Example #3
-2020-04-08 16:56:54,393 	Raw source:     ['4']
-2020-04-08 16:56:54,393 	Raw hypothesis: []
-2020-04-08 16:56:54,393 	Source:     4
-2020-04-08 16:56:54,393 	Reference:  4
-2020-04-08 16:56:54,394 	Hypothesis: 
-2020-04-08 16:56:54,394 Example #6
-2020-04-08 16:56:54,394 	Raw source:     ['3']
-2020-04-08 16:56:54,394 	Raw hypothesis: []
-2020-04-08 16:56:54,395 	Source:     3
-2020-04-08 16:56:54,395 	Reference:  3
-2020-04-08 16:56:54,395 	Hypothesis: 
-2020-04-08 16:56:54,396 Validation result (greedy) at epoch   1, step       40: bleu:   0.00, loss: 413.8257, ppl:   5.2003, duration: 0.1742s
-2020-04-08 16:56:55,195 Epoch   1 Step:       50 Batch Loss:     5.190209 Tokens per Sec:      300, Lr: 0.001000
-2020-04-08 16:56:55,376 Example #0
-2020-04-08 16:56:55,377 	Raw source:     ['4', '3']
-2020-04-08 16:56:55,378 	Raw hypothesis: []
-2020-04-08 16:56:55,378 	Source:     4 3
-2020-04-08 16:56:55,385 	Reference:  3 4
-2020-04-08 16:56:55,385 	Hypothesis: 
-2020-04-08 16:56:55,385 Example #3
-2020-04-08 16:56:55,385 	Raw source:     ['4']
-2020-04-08 16:56:55,385 	Raw hypothesis: []
-2020-04-08 16:56:55,386 	Source:     4
-2020-04-08 16:56:55,386 	Reference:  4
-2020-04-08 16:56:55,386 	Hypothesis: 
-2020-04-08 16:56:55,386 Example #6
-2020-04-08 16:56:55,386 	Raw source:     ['3']
-2020-04-08 16:56:55,386 	Raw hypothesis: []
-2020-04-08 16:56:55,386 	Source:     3
-2020-04-08 16:56:55,386 	Reference:  3
-2020-04-08 16:56:55,386 	Hypothesis: 
-2020-04-08 16:56:55,386 Validation result (greedy) at epoch   1, step       50: bleu:   0.00, loss: 381.9152, ppl:   4.5794, duration: 0.1897s
-2020-04-08 16:56:55,899 Epoch   1 Step:       60 Batch Loss:     2.327198 Tokens per Sec:      468, Lr: 0.001000
-2020-04-08 16:56:56,019 Example #0
-2020-04-08 16:56:56,019 	Raw source:     ['4', '3']
-2020-04-08 16:56:56,019 	Raw hypothesis: []
-2020-04-08 16:56:56,019 	Source:     4 3
-2020-04-08 16:56:56,019 	Reference:  3 4
-2020-04-08 16:56:56,020 	Hypothesis: 
-2020-04-08 16:56:56,020 Example #3
-2020-04-08 16:56:56,020 	Raw source:     ['4']
-2020-04-08 16:56:56,020 	Raw hypothesis: []
-2020-04-08 16:56:56,020 	Source:     4
-2020-04-08 16:56:56,020 	Reference:  4
-2020-04-08 16:56:56,020 	Hypothesis: 
-2020-04-08 16:56:56,020 Example #6
-2020-04-08 16:56:56,021 	Raw source:     ['3']
-2020-04-08 16:56:56,021 	Raw hypothesis: []
-2020-04-08 16:56:56,021 	Source:     3
-2020-04-08 16:56:56,021 	Reference:  3
-2020-04-08 16:56:56,021 	Hypothesis: 
-2020-04-08 16:56:56,021 Validation result (greedy) at epoch   1, step       60: bleu:   0.00, loss: 361.2777, ppl:   4.2180, duration: 0.1208s
-2020-04-08 16:56:56,560 Epoch   1 Step:       70 Batch Loss:     2.295042 Tokens per Sec:      446, Lr: 0.001000
-2020-04-08 16:56:56,690 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:56:56,690 Saving new checkpoint.
-2020-04-08 16:56:56,696 Example #0
-2020-04-08 16:56:56,697 	Raw source:     ['4', '3']
-2020-04-08 16:56:56,697 	Raw hypothesis: []
-2020-04-08 16:56:56,697 	Source:     4 3
-2020-04-08 16:56:56,697 	Reference:  3 4
-2020-04-08 16:56:56,697 	Hypothesis: 
-2020-04-08 16:56:56,697 Example #3
-2020-04-08 16:56:56,698 	Raw source:     ['4']
-2020-04-08 16:56:56,698 	Raw hypothesis: []
-2020-04-08 16:56:56,698 	Source:     4
-2020-04-08 16:56:56,698 	Reference:  4
-2020-04-08 16:56:56,698 	Hypothesis: 
-2020-04-08 16:56:56,698 Example #6
-2020-04-08 16:56:56,698 	Raw source:     ['3']
-2020-04-08 16:56:56,698 	Raw hypothesis: []
-2020-04-08 16:56:56,698 	Source:     3
-2020-04-08 16:56:56,699 	Reference:  3
-2020-04-08 16:56:56,699 	Hypothesis: 
-2020-04-08 16:56:56,699 Validation result (greedy) at epoch   1, step       70: bleu:   0.36, loss: 339.9261, ppl:   3.8740, duration: 0.1385s
-2020-04-08 16:56:57,208 Epoch   1 Step:       80 Batch Loss:     4.231138 Tokens per Sec:      530, Lr: 0.001000
-2020-04-08 16:56:57,295 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:56:57,295 Saving new checkpoint.
-2020-04-08 16:56:57,300 Example #0
-2020-04-08 16:56:57,300 	Raw source:     ['4', '3']
-2020-04-08 16:56:57,300 	Raw hypothesis: []
-2020-04-08 16:56:57,300 	Source:     4 3
-2020-04-08 16:56:57,300 	Reference:  3 4
-2020-04-08 16:56:57,300 	Hypothesis: 
-2020-04-08 16:56:57,301 Example #3
-2020-04-08 16:56:57,301 	Raw source:     ['4']
-2020-04-08 16:56:57,301 	Raw hypothesis: []
-2020-04-08 16:56:57,301 	Source:     4
-2020-04-08 16:56:57,301 	Reference:  4
-2020-04-08 16:56:57,301 	Hypothesis: 
-2020-04-08 16:56:57,301 Example #6
-2020-04-08 16:56:57,301 	Raw source:     ['3']
-2020-04-08 16:56:57,301 	Raw hypothesis: []
-2020-04-08 16:56:57,301 	Source:     3
-2020-04-08 16:56:57,302 	Reference:  3
-2020-04-08 16:56:57,302 	Hypothesis: 
-2020-04-08 16:56:57,302 Validation result (greedy) at epoch   1, step       80: bleu:  10.75, loss: 318.3192, ppl:   3.5545, duration: 0.0928s
-2020-04-08 16:56:57,834 Epoch   1 Step:       90 Batch Loss:     2.223735 Tokens per Sec:      475, Lr: 0.001000
-2020-04-08 16:56:57,973 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:56:57,974 Saving new checkpoint.
-2020-04-08 16:56:57,980 Example #0
-2020-04-08 16:56:57,980 	Raw source:     ['4', '3']
-2020-04-08 16:56:57,980 	Raw hypothesis: ['4']
-2020-04-08 16:56:57,980 	Source:     4 3
-2020-04-08 16:56:57,980 	Reference:  3 4
-2020-04-08 16:56:57,981 	Hypothesis: 4
-2020-04-08 16:56:57,981 Example #3
-2020-04-08 16:56:57,981 	Raw source:     ['4']
-2020-04-08 16:56:57,981 	Raw hypothesis: ['4']
-2020-04-08 16:56:57,981 	Source:     4
-2020-04-08 16:56:57,981 	Reference:  4
-2020-04-08 16:56:57,981 	Hypothesis: 4
-2020-04-08 16:56:57,981 Example #6
-2020-04-08 16:56:57,982 	Raw source:     ['3']
-2020-04-08 16:56:57,982 	Raw hypothesis: ['0']
-2020-04-08 16:56:57,982 	Source:     3
-2020-04-08 16:56:57,982 	Reference:  3
-2020-04-08 16:56:57,982 	Hypothesis: 0
-2020-04-08 16:56:57,982 Validation result (greedy) at epoch   1, step       90: bleu:  41.43, loss: 299.1339, ppl:   3.2929, duration: 0.1475s
-2020-04-08 16:56:58,785 Epoch   1 Step:      100 Batch Loss:     3.819115 Tokens per Sec:      287, Lr: 0.001000
-2020-04-08 16:56:58,916 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:56:58,917 Saving new checkpoint.
-2020-04-08 16:56:58,923 Example #0
-2020-04-08 16:56:58,923 	Raw source:     ['4', '3']
-2020-04-08 16:56:58,923 	Raw hypothesis: ['4']
-2020-04-08 16:56:58,923 	Source:     4 3
-2020-04-08 16:56:58,923 	Reference:  3 4
-2020-04-08 16:56:58,923 	Hypothesis: 4
-2020-04-08 16:56:58,924 Example #3
-2020-04-08 16:56:58,924 	Raw source:     ['4']
-2020-04-08 16:56:58,924 	Raw hypothesis: ['4']
-2020-04-08 16:56:58,924 	Source:     4
-2020-04-08 16:56:58,924 	Reference:  4
-2020-04-08 16:56:58,924 	Hypothesis: 4
-2020-04-08 16:56:58,924 Example #6
-2020-04-08 16:56:58,924 	Raw source:     ['3']
-2020-04-08 16:56:58,924 	Raw hypothesis: ['3']
-2020-04-08 16:56:58,925 	Source:     3
-2020-04-08 16:56:58,925 	Reference:  3
-2020-04-08 16:56:58,925 	Hypothesis: 3
-2020-04-08 16:56:58,925 Validation result (greedy) at epoch   1, step      100: bleu:  49.24, loss: 279.8482, ppl:   3.0494, duration: 0.1397s
-2020-04-08 16:56:59,552 Epoch   1: total training loss 405.10
-2020-04-08 16:56:59,553 EPOCH 2
-2020-04-08 16:56:59,781 Epoch   2 Step:      110 Batch Loss:     3.666849 Tokens per Sec:     1052, Lr: 0.001000
-2020-04-08 16:56:59,913 Example #0
-2020-04-08 16:56:59,913 	Raw source:     ['4', '3']
-2020-04-08 16:56:59,913 	Raw hypothesis: ['4']
-2020-04-08 16:56:59,913 	Source:     4 3
-2020-04-08 16:56:59,914 	Reference:  3 4
-2020-04-08 16:56:59,914 	Hypothesis: 4
-2020-04-08 16:56:59,914 Example #3
-2020-04-08 16:56:59,914 	Raw source:     ['4']
-2020-04-08 16:56:59,914 	Raw hypothesis: ['4']
-2020-04-08 16:56:59,914 	Source:     4
-2020-04-08 16:56:59,914 	Reference:  4
-2020-04-08 16:56:59,915 	Hypothesis: 4
-2020-04-08 16:56:59,915 Example #6
-2020-04-08 16:56:59,915 	Raw source:     ['3']
-2020-04-08 16:56:59,915 	Raw hypothesis: ['4']
-2020-04-08 16:56:59,915 	Source:     3
-2020-04-08 16:56:59,915 	Reference:  3
-2020-04-08 16:56:59,915 	Hypothesis: 4
-2020-04-08 16:56:59,915 Validation result (greedy) at epoch   2, step      110: bleu:  43.84, loss: 271.8845, ppl:   2.9541, duration: 0.1342s
-2020-04-08 16:57:00,929 Epoch   2 Step:      120 Batch Loss:     3.469675 Tokens per Sec:      286, Lr: 0.001000
-2020-04-08 16:57:01,125 Example #0
-2020-04-08 16:57:01,125 	Raw source:     ['4', '3']
-2020-04-08 16:57:01,125 	Raw hypothesis: ['4']
-2020-04-08 16:57:01,125 	Source:     4 3
-2020-04-08 16:57:01,126 	Reference:  3 4
-2020-04-08 16:57:01,126 	Hypothesis: 4
-2020-04-08 16:57:01,126 Example #3
-2020-04-08 16:57:01,126 	Raw source:     ['4']
-2020-04-08 16:57:01,126 	Raw hypothesis: ['4']
-2020-04-08 16:57:01,126 	Source:     4
-2020-04-08 16:57:01,126 	Reference:  4
-2020-04-08 16:57:01,126 	Hypothesis: 4
-2020-04-08 16:57:01,126 Example #6
-2020-04-08 16:57:01,126 	Raw source:     ['3']
-2020-04-08 16:57:01,126 	Raw hypothesis: ['4']
-2020-04-08 16:57:01,126 	Source:     3
-2020-04-08 16:57:01,126 	Reference:  3
-2020-04-08 16:57:01,126 	Hypothesis: 4
-2020-04-08 16:57:01,126 Validation result (greedy) at epoch   2, step      120: bleu:  27.58, loss: 249.0349, ppl:   2.6971, duration: 0.1962s
-2020-04-08 16:57:02,136 Epoch   2 Step:      130 Batch Loss:     3.166970 Tokens per Sec:      258, Lr: 0.001000
-2020-04-08 16:57:02,287 Example #0
-2020-04-08 16:57:02,287 	Raw source:     ['4', '3']
-2020-04-08 16:57:02,287 	Raw hypothesis: ['4', '4']
-2020-04-08 16:57:02,288 	Source:     4 3
-2020-04-08 16:57:02,288 	Reference:  3 4
-2020-04-08 16:57:02,288 	Hypothesis: 4 4
-2020-04-08 16:57:02,288 Example #3
-2020-04-08 16:57:02,288 	Raw source:     ['4']
-2020-04-08 16:57:02,288 	Raw hypothesis: ['4']
-2020-04-08 16:57:02,288 	Source:     4
-2020-04-08 16:57:02,288 	Reference:  4
-2020-04-08 16:57:02,289 	Hypothesis: 4
-2020-04-08 16:57:02,289 Example #6
-2020-04-08 16:57:02,289 	Raw source:     ['3']
-2020-04-08 16:57:02,289 	Raw hypothesis: ['3']
-2020-04-08 16:57:02,289 	Source:     3
-2020-04-08 16:57:02,289 	Reference:  3
-2020-04-08 16:57:02,289 	Hypothesis: 3
-2020-04-08 16:57:02,289 Validation result (greedy) at epoch   2, step      130: bleu:  47.48, loss: 241.6419, ppl:   2.6188, duration: 0.1530s
-2020-04-08 16:57:03,215 Epoch   2 Step:      140 Batch Loss:     1.403525 Tokens per Sec:      259, Lr: 0.001000
-2020-04-08 16:57:03,381 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:03,382 Saving new checkpoint.
-2020-04-08 16:57:03,388 Example #0
-2020-04-08 16:57:03,388 	Raw source:     ['4', '3']
-2020-04-08 16:57:03,388 	Raw hypothesis: ['4']
-2020-04-08 16:57:03,388 	Source:     4 3
-2020-04-08 16:57:03,388 	Reference:  3 4
-2020-04-08 16:57:03,389 	Hypothesis: 4
-2020-04-08 16:57:03,389 Example #3
-2020-04-08 16:57:03,389 	Raw source:     ['4']
-2020-04-08 16:57:03,389 	Raw hypothesis: ['4']
-2020-04-08 16:57:03,389 	Source:     4
-2020-04-08 16:57:03,389 	Reference:  4
-2020-04-08 16:57:03,390 	Hypothesis: 4
-2020-04-08 16:57:03,390 Example #6
-2020-04-08 16:57:03,390 	Raw source:     ['3']
-2020-04-08 16:57:03,390 	Raw hypothesis: ['3']
-2020-04-08 16:57:03,390 	Source:     3
-2020-04-08 16:57:03,390 	Reference:  3
-2020-04-08 16:57:03,390 	Hypothesis: 3
-2020-04-08 16:57:03,390 Validation result (greedy) at epoch   2, step      140: bleu:  57.57, loss: 219.6932, ppl:   2.3995, duration: 0.1749s
-2020-04-08 16:57:04,202 Epoch   2 Step:      150 Batch Loss:     3.492170 Tokens per Sec:      287, Lr: 0.001000
-2020-04-08 16:57:04,342 Example #0
-2020-04-08 16:57:04,342 	Raw source:     ['4', '3']
-2020-04-08 16:57:04,342 	Raw hypothesis: ['4']
-2020-04-08 16:57:04,343 	Source:     4 3
-2020-04-08 16:57:04,343 	Reference:  3 4
-2020-04-08 16:57:04,343 	Hypothesis: 4
-2020-04-08 16:57:04,343 Example #3
-2020-04-08 16:57:04,343 	Raw source:     ['4']
-2020-04-08 16:57:04,343 	Raw hypothesis: ['4']
-2020-04-08 16:57:04,343 	Source:     4
-2020-04-08 16:57:04,343 	Reference:  4
-2020-04-08 16:57:04,343 	Hypothesis: 4
-2020-04-08 16:57:04,344 Example #6
-2020-04-08 16:57:04,344 	Raw source:     ['3']
-2020-04-08 16:57:04,344 	Raw hypothesis: ['3']
-2020-04-08 16:57:04,344 	Source:     3
-2020-04-08 16:57:04,344 	Reference:  3
-2020-04-08 16:57:04,344 	Hypothesis: 3
-2020-04-08 16:57:04,344 Validation result (greedy) at epoch   2, step      150: bleu:  56.45, loss: 240.0380, ppl:   2.6021, duration: 0.1421s
-2020-04-08 16:57:05,254 Epoch   2 Step:      160 Batch Loss:     3.085835 Tokens per Sec:      264, Lr: 0.001000
-2020-04-08 16:57:05,395 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:05,396 Saving new checkpoint.
-2020-04-08 16:57:05,402 Example #0
-2020-04-08 16:57:05,402 	Raw source:     ['4', '3']
-2020-04-08 16:57:05,403 	Raw hypothesis: ['4']
-2020-04-08 16:57:05,403 	Source:     4 3
-2020-04-08 16:57:05,403 	Reference:  3 4
-2020-04-08 16:57:05,403 	Hypothesis: 4
-2020-04-08 16:57:05,403 Example #3
-2020-04-08 16:57:05,403 	Raw source:     ['4']
-2020-04-08 16:57:05,403 	Raw hypothesis: ['4']
-2020-04-08 16:57:05,403 	Source:     4
-2020-04-08 16:57:05,403 	Reference:  4
-2020-04-08 16:57:05,404 	Hypothesis: 4
-2020-04-08 16:57:05,404 Example #6
-2020-04-08 16:57:05,404 	Raw source:     ['3']
-2020-04-08 16:57:05,404 	Raw hypothesis: ['3']
-2020-04-08 16:57:05,404 	Source:     3
-2020-04-08 16:57:05,404 	Reference:  3
-2020-04-08 16:57:05,404 	Hypothesis: 3
-2020-04-08 16:57:05,404 Validation result (greedy) at epoch   2, step      160: bleu:  58.85, loss: 223.6875, ppl:   2.4380, duration: 0.1501s
-2020-04-08 16:57:06,263 Epoch   2 Step:      170 Batch Loss:     1.022578 Tokens per Sec:      315, Lr: 0.001000
-2020-04-08 16:57:06,416 Example #0
-2020-04-08 16:57:06,416 	Raw source:     ['4', '3']
-2020-04-08 16:57:06,416 	Raw hypothesis: ['4']
-2020-04-08 16:57:06,416 	Source:     4 3
-2020-04-08 16:57:06,416 	Reference:  3 4
-2020-04-08 16:57:06,416 	Hypothesis: 4
-2020-04-08 16:57:06,417 Example #3
-2020-04-08 16:57:06,417 	Raw source:     ['4']
-2020-04-08 16:57:06,417 	Raw hypothesis: ['4']
-2020-04-08 16:57:06,417 	Source:     4
-2020-04-08 16:57:06,417 	Reference:  4
-2020-04-08 16:57:06,417 	Hypothesis: 4
-2020-04-08 16:57:06,417 Example #6
-2020-04-08 16:57:06,417 	Raw source:     ['3']
-2020-04-08 16:57:06,418 	Raw hypothesis: ['3']
-2020-04-08 16:57:06,418 	Source:     3
-2020-04-08 16:57:06,418 	Reference:  3
-2020-04-08 16:57:06,418 	Hypothesis: 3
-2020-04-08 16:57:06,418 Validation result (greedy) at epoch   2, step      170: bleu:  42.14, loss: 181.7144, ppl:   2.0626, duration: 0.1546s
-2020-04-08 16:57:07,198 Epoch   2 Step:      180 Batch Loss:     2.322941 Tokens per Sec:      282, Lr: 0.001000
-2020-04-08 16:57:07,344 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:07,345 Saving new checkpoint.
-2020-04-08 16:57:07,351 Example #0
-2020-04-08 16:57:07,351 	Raw source:     ['4', '3']
-2020-04-08 16:57:07,351 	Raw hypothesis: ['4']
-2020-04-08 16:57:07,351 	Source:     4 3
-2020-04-08 16:57:07,351 	Reference:  3 4
-2020-04-08 16:57:07,352 	Hypothesis: 4
-2020-04-08 16:57:07,352 Example #3
-2020-04-08 16:57:07,352 	Raw source:     ['4']
-2020-04-08 16:57:07,352 	Raw hypothesis: ['4']
-2020-04-08 16:57:07,352 	Source:     4
-2020-04-08 16:57:07,352 	Reference:  4
-2020-04-08 16:57:07,352 	Hypothesis: 4
-2020-04-08 16:57:07,352 Example #6
-2020-04-08 16:57:07,352 	Raw source:     ['3']
-2020-04-08 16:57:07,353 	Raw hypothesis: ['3']
-2020-04-08 16:57:07,353 	Source:     3
-2020-04-08 16:57:07,353 	Reference:  3
-2020-04-08 16:57:07,353 	Hypothesis: 3
-2020-04-08 16:57:07,353 Validation result (greedy) at epoch   2, step      180: bleu:  60.89, loss: 173.4255, ppl:   1.9956, duration: 0.1543s
-2020-04-08 16:57:08,131 Epoch   2 Step:      190 Batch Loss:     0.709227 Tokens per Sec:      321, Lr: 0.001000
-2020-04-08 16:57:08,223 Example #0
-2020-04-08 16:57:08,224 	Raw source:     ['4', '3']
-2020-04-08 16:57:08,224 	Raw hypothesis: ['4']
-2020-04-08 16:57:08,224 	Source:     4 3
-2020-04-08 16:57:08,224 	Reference:  3 4
-2020-04-08 16:57:08,224 	Hypothesis: 4
-2020-04-08 16:57:08,224 Example #3
-2020-04-08 16:57:08,224 	Raw source:     ['4']
-2020-04-08 16:57:08,224 	Raw hypothesis: ['4']
-2020-04-08 16:57:08,225 	Source:     4
-2020-04-08 16:57:08,225 	Reference:  4
-2020-04-08 16:57:08,225 	Hypothesis: 4
-2020-04-08 16:57:08,225 Example #6
-2020-04-08 16:57:08,225 	Raw source:     ['3']
-2020-04-08 16:57:08,225 	Raw hypothesis: ['3']
-2020-04-08 16:57:08,225 	Source:     3
-2020-04-08 16:57:08,225 	Reference:  3
-2020-04-08 16:57:08,225 	Hypothesis: 3
-2020-04-08 16:57:08,225 Validation result (greedy) at epoch   2, step      190: bleu:  52.39, loss: 161.8181, ppl:   1.9054, duration: 0.0942s
-2020-04-08 16:57:08,934 Epoch   2 Step:      200 Batch Loss:     2.216812 Tokens per Sec:      353, Lr: 0.001000
-2020-04-08 16:57:09,027 Example #0
-2020-04-08 16:57:09,027 	Raw source:     ['4', '3']
-2020-04-08 16:57:09,027 	Raw hypothesis: ['4', '4']
-2020-04-08 16:57:09,027 	Source:     4 3
-2020-04-08 16:57:09,027 	Reference:  3 4
-2020-04-08 16:57:09,027 	Hypothesis: 4 4
-2020-04-08 16:57:09,027 Example #3
-2020-04-08 16:57:09,027 	Raw source:     ['4']
-2020-04-08 16:57:09,028 	Raw hypothesis: ['4']
-2020-04-08 16:57:09,028 	Source:     4
-2020-04-08 16:57:09,028 	Reference:  4
-2020-04-08 16:57:09,028 	Hypothesis: 4
-2020-04-08 16:57:09,028 Example #6
-2020-04-08 16:57:09,028 	Raw source:     ['3']
-2020-04-08 16:57:09,028 	Raw hypothesis: ['3']
-2020-04-08 16:57:09,028 	Source:     3
-2020-04-08 16:57:09,028 	Reference:  3
-2020-04-08 16:57:09,029 	Hypothesis: 3
-2020-04-08 16:57:09,029 Validation result (greedy) at epoch   2, step      200: bleu:  50.98, loss: 138.6410, ppl:   1.7373, duration: 0.0948s
-2020-04-08 16:57:09,687 Epoch   2: total training loss 223.04
-2020-04-08 16:57:09,687 EPOCH 3
-2020-04-08 16:57:09,923 Epoch   3 Step:      210 Batch Loss:     2.217675 Tokens per Sec:     1016, Lr: 0.001000
-2020-04-08 16:57:10,083 Example #0
-2020-04-08 16:57:10,084 	Raw source:     ['4', '3']
-2020-04-08 16:57:10,084 	Raw hypothesis: ['4', '4']
-2020-04-08 16:57:10,084 	Source:     4 3
-2020-04-08 16:57:10,084 	Reference:  3 4
-2020-04-08 16:57:10,084 	Hypothesis: 4 4
-2020-04-08 16:57:10,084 Example #3
-2020-04-08 16:57:10,084 	Raw source:     ['4']
-2020-04-08 16:57:10,084 	Raw hypothesis: ['4']
-2020-04-08 16:57:10,085 	Source:     4
-2020-04-08 16:57:10,085 	Reference:  4
-2020-04-08 16:57:10,085 	Hypothesis: 4
-2020-04-08 16:57:10,085 Example #6
-2020-04-08 16:57:10,085 	Raw source:     ['3']
-2020-04-08 16:57:10,085 	Raw hypothesis: ['3']
-2020-04-08 16:57:10,085 	Source:     3
-2020-04-08 16:57:10,085 	Reference:  3
-2020-04-08 16:57:10,086 	Hypothesis: 3
-2020-04-08 16:57:10,086 Validation result (greedy) at epoch   3, step      210: bleu:  51.44, loss: 118.7734, ppl:   1.6051, duration: 0.1614s
-2020-04-08 16:57:11,257 Epoch   3 Step:      220 Batch Loss:     0.470486 Tokens per Sec:      213, Lr: 0.001000
-2020-04-08 16:57:11,406 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:11,407 Saving new checkpoint.
-2020-04-08 16:57:11,413 Example #0
-2020-04-08 16:57:11,413 	Raw source:     ['4', '3']
-2020-04-08 16:57:11,413 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:11,413 	Source:     4 3
-2020-04-08 16:57:11,413 	Reference:  3 4
-2020-04-08 16:57:11,413 	Hypothesis: 3 4
-2020-04-08 16:57:11,413 Example #3
-2020-04-08 16:57:11,413 	Raw source:     ['4']
-2020-04-08 16:57:11,414 	Raw hypothesis: ['4']
-2020-04-08 16:57:11,414 	Source:     4
-2020-04-08 16:57:11,414 	Reference:  4
-2020-04-08 16:57:11,414 	Hypothesis: 4
-2020-04-08 16:57:11,414 Example #6
-2020-04-08 16:57:11,414 	Raw source:     ['3']
-2020-04-08 16:57:11,414 	Raw hypothesis: ['3']
-2020-04-08 16:57:11,414 	Source:     3
-2020-04-08 16:57:11,414 	Reference:  3
-2020-04-08 16:57:11,415 	Hypothesis: 3
-2020-04-08 16:57:11,415 Validation result (greedy) at epoch   3, step      220: bleu:  73.75, loss: 102.0728, ppl:   1.5018, duration: 0.1568s
-2020-04-08 16:57:12,659 Epoch   3 Step:      230 Batch Loss:     1.600311 Tokens per Sec:      201, Lr: 0.001000
-2020-04-08 16:57:13,039 Example #0
-2020-04-08 16:57:13,039 	Raw source:     ['4', '3']
-2020-04-08 16:57:13,039 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:13,039 	Source:     4 3
-2020-04-08 16:57:13,040 	Reference:  3 4
-2020-04-08 16:57:13,040 	Hypothesis: 3 4
-2020-04-08 16:57:13,040 Example #3
-2020-04-08 16:57:13,040 	Raw source:     ['4']
-2020-04-08 16:57:13,040 	Raw hypothesis: ['4']
-2020-04-08 16:57:13,040 	Source:     4
-2020-04-08 16:57:13,040 	Reference:  4
-2020-04-08 16:57:13,040 	Hypothesis: 4
-2020-04-08 16:57:13,040 Example #6
-2020-04-08 16:57:13,041 	Raw source:     ['3']
-2020-04-08 16:57:13,041 	Raw hypothesis: ['3']
-2020-04-08 16:57:13,041 	Source:     3
-2020-04-08 16:57:13,041 	Reference:  3
-2020-04-08 16:57:13,041 	Hypothesis: 3
-2020-04-08 16:57:13,041 Validation result (greedy) at epoch   3, step      230: bleu:  71.22, loss:  89.9627, ppl:   1.4311, duration: 0.3818s
-2020-04-08 16:57:14,698 Epoch   3 Step:      240 Batch Loss:     0.367750 Tokens per Sec:      151, Lr: 0.001000
-2020-04-08 16:57:15,031 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:15,031 Saving new checkpoint.
-2020-04-08 16:57:15,039 Example #0
-2020-04-08 16:57:15,039 	Raw source:     ['4', '3']
-2020-04-08 16:57:15,039 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:15,039 	Source:     4 3
-2020-04-08 16:57:15,039 	Reference:  3 4
-2020-04-08 16:57:15,040 	Hypothesis: 3 4
-2020-04-08 16:57:15,040 Example #3
-2020-04-08 16:57:15,040 	Raw source:     ['4']
-2020-04-08 16:57:15,040 	Raw hypothesis: ['4']
-2020-04-08 16:57:15,040 	Source:     4
-2020-04-08 16:57:15,040 	Reference:  4
-2020-04-08 16:57:15,040 	Hypothesis: 4
-2020-04-08 16:57:15,040 Example #6
-2020-04-08 16:57:15,040 	Raw source:     ['3']
-2020-04-08 16:57:15,040 	Raw hypothesis: ['3']
-2020-04-08 16:57:15,041 	Source:     3
-2020-04-08 16:57:15,041 	Reference:  3
-2020-04-08 16:57:15,041 	Hypothesis: 3
-2020-04-08 16:57:15,041 Validation result (greedy) at epoch   3, step      240: bleu:  84.22, loss:  77.2694, ppl:   1.3605, duration: 0.3425s
-2020-04-08 16:57:16,365 Epoch   3 Step:      250 Batch Loss:     1.061073 Tokens per Sec:      181, Lr: 0.001000
-2020-04-08 16:57:16,572 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:16,572 Saving new checkpoint.
-2020-04-08 16:57:16,576 Example #0
-2020-04-08 16:57:16,576 	Raw source:     ['4', '3']
-2020-04-08 16:57:16,577 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:16,577 	Source:     4 3
-2020-04-08 16:57:16,577 	Reference:  3 4
-2020-04-08 16:57:16,577 	Hypothesis: 3 4
-2020-04-08 16:57:16,577 Example #3
-2020-04-08 16:57:16,577 	Raw source:     ['4']
-2020-04-08 16:57:16,577 	Raw hypothesis: ['4']
-2020-04-08 16:57:16,577 	Source:     4
-2020-04-08 16:57:16,577 	Reference:  4
-2020-04-08 16:57:16,577 	Hypothesis: 4
-2020-04-08 16:57:16,577 Example #6
-2020-04-08 16:57:16,577 	Raw source:     ['3']
-2020-04-08 16:57:16,577 	Raw hypothesis: ['3']
-2020-04-08 16:57:16,577 	Source:     3
-2020-04-08 16:57:16,577 	Reference:  3
-2020-04-08 16:57:16,577 	Hypothesis: 3
-2020-04-08 16:57:16,578 Validation result (greedy) at epoch   3, step      250: bleu:  86.44, loss:  66.3133, ppl:   1.3024, duration: 0.2113s
-2020-04-08 16:57:17,565 Epoch   3 Step:      260 Batch Loss:     1.260924 Tokens per Sec:      266, Lr: 0.001000
-2020-04-08 16:57:17,791 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:17,792 Saving new checkpoint.
-2020-04-08 16:57:17,797 Example #0
-2020-04-08 16:57:17,797 	Raw source:     ['4', '3']
-2020-04-08 16:57:17,798 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:17,798 	Source:     4 3
-2020-04-08 16:57:17,798 	Reference:  3 4
-2020-04-08 16:57:17,798 	Hypothesis: 3 4
-2020-04-08 16:57:17,798 Example #3
-2020-04-08 16:57:17,798 	Raw source:     ['4']
-2020-04-08 16:57:17,798 	Raw hypothesis: ['4']
-2020-04-08 16:57:17,798 	Source:     4
-2020-04-08 16:57:17,799 	Reference:  4
-2020-04-08 16:57:17,799 	Hypothesis: 4
-2020-04-08 16:57:17,799 Example #6
-2020-04-08 16:57:17,799 	Raw source:     ['3']
-2020-04-08 16:57:17,799 	Raw hypothesis: ['3']
-2020-04-08 16:57:17,799 	Source:     3
-2020-04-08 16:57:17,799 	Reference:  3
-2020-04-08 16:57:17,800 	Hypothesis: 3
-2020-04-08 16:57:17,800 Validation result (greedy) at epoch   3, step      260: bleu:  97.37, loss:  54.8894, ppl:   1.2444, duration: 0.2252s
-2020-04-08 16:57:19,170 Epoch   3 Step:      270 Batch Loss:     0.216115 Tokens per Sec:      190, Lr: 0.001000
-2020-04-08 16:57:19,322 Hooray! New best validation result [eval_metric]!
-2020-04-08 16:57:19,322 Saving new checkpoint.
-2020-04-08 16:57:19,328 Example #0
-2020-04-08 16:57:19,328 	Raw source:     ['4', '3']
-2020-04-08 16:57:19,329 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:19,329 	Source:     4 3
-2020-04-08 16:57:19,329 	Reference:  3 4
-2020-04-08 16:57:19,329 	Hypothesis: 3 4
-2020-04-08 16:57:19,329 Example #3
-2020-04-08 16:57:19,329 	Raw source:     ['4']
-2020-04-08 16:57:19,329 	Raw hypothesis: ['4']
-2020-04-08 16:57:19,329 	Source:     4
-2020-04-08 16:57:19,329 	Reference:  4
-2020-04-08 16:57:19,330 	Hypothesis: 4
-2020-04-08 16:57:19,330 Example #6
-2020-04-08 16:57:19,330 	Raw source:     ['3']
-2020-04-08 16:57:19,330 	Raw hypothesis: ['3']
-2020-04-08 16:57:19,330 	Source:     3
-2020-04-08 16:57:19,330 	Reference:  3
-2020-04-08 16:57:19,330 	Hypothesis: 3
-2020-04-08 16:57:19,330 Validation result (greedy) at epoch   3, step      270: bleu: 100.00, loss:  46.8076, ppl:   1.2050, duration: 0.1602s
-2020-04-08 16:57:20,217 Epoch   3 Step:      280 Batch Loss:     0.805059 Tokens per Sec:      282, Lr: 0.001000
-2020-04-08 16:57:20,410 Example #0
-2020-04-08 16:57:20,410 	Raw source:     ['4', '3']
-2020-04-08 16:57:20,411 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:20,411 	Source:     4 3
-2020-04-08 16:57:20,411 	Reference:  3 4
-2020-04-08 16:57:20,411 	Hypothesis: 3 4
-2020-04-08 16:57:20,411 Example #3
-2020-04-08 16:57:20,411 	Raw source:     ['4']
-2020-04-08 16:57:20,411 	Raw hypothesis: ['4']
-2020-04-08 16:57:20,411 	Source:     4
-2020-04-08 16:57:20,411 	Reference:  4
-2020-04-08 16:57:20,411 	Hypothesis: 4
-2020-04-08 16:57:20,412 Example #6
-2020-04-08 16:57:20,412 	Raw source:     ['3']
-2020-04-08 16:57:20,412 	Raw hypothesis: ['3']
-2020-04-08 16:57:20,412 	Source:     3
-2020-04-08 16:57:20,412 	Reference:  3
-2020-04-08 16:57:20,412 	Hypothesis: 3
-2020-04-08 16:57:20,412 Validation result (greedy) at epoch   3, step      280: bleu: 100.00, loss:  39.3711, ppl:   1.1698, duration: 0.1949s
-2020-04-08 16:57:21,302 Epoch   3 Step:      290 Batch Loss:     0.676148 Tokens per Sec:      258, Lr: 0.001000
-2020-04-08 16:57:21,475 Example #0
-2020-04-08 16:57:21,475 	Raw source:     ['4', '3']
-2020-04-08 16:57:21,475 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:21,476 	Source:     4 3
-2020-04-08 16:57:21,482 	Reference:  3 4
-2020-04-08 16:57:21,483 	Hypothesis: 3 4
-2020-04-08 16:57:21,483 Example #3
-2020-04-08 16:57:21,483 	Raw source:     ['4']
-2020-04-08 16:57:21,483 	Raw hypothesis: ['4']
-2020-04-08 16:57:21,483 	Source:     4
-2020-04-08 16:57:21,487 	Reference:  4
-2020-04-08 16:57:21,487 	Hypothesis: 4
-2020-04-08 16:57:21,487 Example #6
-2020-04-08 16:57:21,487 	Raw source:     ['3']
-2020-04-08 16:57:21,487 	Raw hypothesis: ['3']
-2020-04-08 16:57:21,487 	Source:     3
-2020-04-08 16:57:21,487 	Reference:  3
-2020-04-08 16:57:21,488 	Hypothesis: 3
-2020-04-08 16:57:21,488 Validation result (greedy) at epoch   3, step      290: bleu: 100.00, loss:  33.7329, ppl:   1.1438, duration: 0.1847s
-2020-04-08 16:57:22,437 Epoch   3 Step:      300 Batch Loss:     0.171353 Tokens per Sec:      274, Lr: 0.001000
-2020-04-08 16:57:22,639 Example #0
-2020-04-08 16:57:22,639 	Raw source:     ['4', '3']
-2020-04-08 16:57:22,639 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:22,639 	Source:     4 3
-2020-04-08 16:57:22,639 	Reference:  3 4
-2020-04-08 16:57:22,640 	Hypothesis: 3 4
-2020-04-08 16:57:22,640 Example #3
-2020-04-08 16:57:22,640 	Raw source:     ['4']
-2020-04-08 16:57:22,640 	Raw hypothesis: ['4']
-2020-04-08 16:57:22,640 	Source:     4
-2020-04-08 16:57:22,640 	Reference:  4
-2020-04-08 16:57:22,640 	Hypothesis: 4
-2020-04-08 16:57:22,640 Example #6
-2020-04-08 16:57:22,640 	Raw source:     ['3']
-2020-04-08 16:57:22,640 	Raw hypothesis: ['3']
-2020-04-08 16:57:22,640 	Source:     3
-2020-04-08 16:57:22,641 	Reference:  3
-2020-04-08 16:57:22,641 	Hypothesis: 3
-2020-04-08 16:57:22,641 Validation result (greedy) at epoch   3, step      300: bleu: 100.00, loss:  29.2038, ppl:   1.1234, duration: 0.2029s
-2020-04-08 16:57:23,310 Epoch   3: total training loss 79.62
-2020-04-08 16:57:23,310 EPOCH 4
-2020-04-08 16:57:23,531 Epoch   4 Step:      310 Batch Loss:     0.146260 Tokens per Sec:     1085, Lr: 0.001000
-2020-04-08 16:57:23,663 Example #0
-2020-04-08 16:57:23,663 	Raw source:     ['4', '3']
-2020-04-08 16:57:23,663 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:23,663 	Source:     4 3
-2020-04-08 16:57:23,663 	Reference:  3 4
-2020-04-08 16:57:23,664 	Hypothesis: 3 4
-2020-04-08 16:57:23,664 Example #3
-2020-04-08 16:57:23,664 	Raw source:     ['4']
-2020-04-08 16:57:23,664 	Raw hypothesis: ['4']
-2020-04-08 16:57:23,664 	Source:     4
-2020-04-08 16:57:23,664 	Reference:  4
-2020-04-08 16:57:23,664 	Hypothesis: 4
-2020-04-08 16:57:23,664 Example #6
-2020-04-08 16:57:23,664 	Raw source:     ['3']
-2020-04-08 16:57:23,665 	Raw hypothesis: ['3']
-2020-04-08 16:57:23,665 	Source:     3
-2020-04-08 16:57:23,665 	Reference:  3
-2020-04-08 16:57:23,665 	Hypothesis: 3
-2020-04-08 16:57:23,665 Validation result (greedy) at epoch   4, step      310: bleu: 100.00, loss:  23.4862, ppl:   1.0981, duration: 0.1331s
-2020-04-08 16:57:24,528 Epoch   4 Step:      320 Batch Loss:     0.457596 Tokens per Sec:      290, Lr: 0.001000
-2020-04-08 16:57:24,679 Example #0
-2020-04-08 16:57:24,680 	Raw source:     ['4', '3']
-2020-04-08 16:57:24,680 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:24,680 	Source:     4 3
-2020-04-08 16:57:24,680 	Reference:  3 4
-2020-04-08 16:57:24,680 	Hypothesis: 3 4
-2020-04-08 16:57:24,680 Example #3
-2020-04-08 16:57:24,680 	Raw source:     ['4']
-2020-04-08 16:57:24,680 	Raw hypothesis: ['4']
-2020-04-08 16:57:24,680 	Source:     4
-2020-04-08 16:57:24,681 	Reference:  4
-2020-04-08 16:57:24,681 	Hypothesis: 4
-2020-04-08 16:57:24,681 Example #6
-2020-04-08 16:57:24,681 	Raw source:     ['3']
-2020-04-08 16:57:24,681 	Raw hypothesis: ['3']
-2020-04-08 16:57:24,682 	Source:     3
-2020-04-08 16:57:24,682 	Reference:  3
-2020-04-08 16:57:24,682 	Hypothesis: 3
-2020-04-08 16:57:24,682 Validation result (greedy) at epoch   4, step      320: bleu: 100.00, loss:  20.6085, ppl:   1.0856, duration: 0.1540s
-2020-04-08 16:57:25,611 Epoch   4 Step:      330 Batch Loss:     0.423906 Tokens per Sec:      283, Lr: 0.001000
-2020-04-08 16:57:25,763 Example #0
-2020-04-08 16:57:25,763 	Raw source:     ['4', '3']
-2020-04-08 16:57:25,763 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:25,763 	Source:     4 3
-2020-04-08 16:57:25,763 	Reference:  3 4
-2020-04-08 16:57:25,763 	Hypothesis: 3 4
-2020-04-08 16:57:25,763 Example #3
-2020-04-08 16:57:25,764 	Raw source:     ['4']
-2020-04-08 16:57:25,764 	Raw hypothesis: ['4']
-2020-04-08 16:57:25,764 	Source:     4
-2020-04-08 16:57:25,764 	Reference:  4
-2020-04-08 16:57:25,764 	Hypothesis: 4
-2020-04-08 16:57:25,764 Example #6
-2020-04-08 16:57:25,764 	Raw source:     ['3']
-2020-04-08 16:57:25,764 	Raw hypothesis: ['3']
-2020-04-08 16:57:25,765 	Source:     3
-2020-04-08 16:57:25,765 	Reference:  3
-2020-04-08 16:57:25,765 	Hypothesis: 3
-2020-04-08 16:57:25,765 Validation result (greedy) at epoch   4, step      330: bleu: 100.00, loss:  16.3878, ppl:   1.0675, duration: 0.1530s
-2020-04-08 16:57:26,564 Epoch   4 Step:      340 Batch Loss:     0.188210 Tokens per Sec:      288, Lr: 0.000500
-2020-04-08 16:57:26,658 Example #0
-2020-04-08 16:57:26,658 	Raw source:     ['4', '3']
-2020-04-08 16:57:26,658 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:26,658 	Source:     4 3
-2020-04-08 16:57:26,658 	Reference:  3 4
-2020-04-08 16:57:26,658 	Hypothesis: 3 4
-2020-04-08 16:57:26,659 Example #3
-2020-04-08 16:57:26,659 	Raw source:     ['4']
-2020-04-08 16:57:26,659 	Raw hypothesis: ['4']
-2020-04-08 16:57:26,659 	Source:     4
-2020-04-08 16:57:26,659 	Reference:  4
-2020-04-08 16:57:26,659 	Hypothesis: 4
-2020-04-08 16:57:26,659 Example #6
-2020-04-08 16:57:26,659 	Raw source:     ['3']
-2020-04-08 16:57:26,659 	Raw hypothesis: ['3']
-2020-04-08 16:57:26,660 	Source:     3
-2020-04-08 16:57:26,660 	Reference:  3
-2020-04-08 16:57:26,660 	Hypothesis: 3
-2020-04-08 16:57:26,660 Validation result (greedy) at epoch   4, step      340: bleu: 100.00, loss:  15.0503, ppl:   1.0618, duration: 0.0948s
-2020-04-08 16:57:27,567 Epoch   4 Step:      350 Batch Loss:     0.352826 Tokens per Sec:      298, Lr: 0.000500
-2020-04-08 16:57:27,756 Example #0
-2020-04-08 16:57:27,756 	Raw source:     ['4', '3']
-2020-04-08 16:57:27,756 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:27,756 	Source:     4 3
-2020-04-08 16:57:27,756 	Reference:  3 4
-2020-04-08 16:57:27,756 	Hypothesis: 3 4
-2020-04-08 16:57:27,756 Example #3
-2020-04-08 16:57:27,756 	Raw source:     ['4']
-2020-04-08 16:57:27,756 	Raw hypothesis: ['4']
-2020-04-08 16:57:27,756 	Source:     4
-2020-04-08 16:57:27,757 	Reference:  4
-2020-04-08 16:57:27,757 	Hypothesis: 4
-2020-04-08 16:57:27,757 Example #6
-2020-04-08 16:57:27,757 	Raw source:     ['3']
-2020-04-08 16:57:27,757 	Raw hypothesis: ['3']
-2020-04-08 16:57:27,757 	Source:     3
-2020-04-08 16:57:27,757 	Reference:  3
-2020-04-08 16:57:27,757 	Hypothesis: 3
-2020-04-08 16:57:27,757 Validation result (greedy) at epoch   4, step      350: bleu: 100.00, loss:  13.7512, ppl:   1.0563, duration: 0.1891s
-2020-04-08 16:57:28,936 Epoch   4 Step:      360 Batch Loss:     0.094984 Tokens per Sec:      195, Lr: 0.000500
-2020-04-08 16:57:29,081 Example #0
-2020-04-08 16:57:29,081 	Raw source:     ['4', '3']
-2020-04-08 16:57:29,081 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:29,081 	Source:     4 3
-2020-04-08 16:57:29,082 	Reference:  3 4
-2020-04-08 16:57:29,082 	Hypothesis: 3 4
-2020-04-08 16:57:29,082 Example #3
-2020-04-08 16:57:29,082 	Raw source:     ['4']
-2020-04-08 16:57:29,082 	Raw hypothesis: ['4']
-2020-04-08 16:57:29,082 	Source:     4
-2020-04-08 16:57:29,082 	Reference:  4
-2020-04-08 16:57:29,083 	Hypothesis: 4
-2020-04-08 16:57:29,083 Example #6
-2020-04-08 16:57:29,083 	Raw source:     ['3']
-2020-04-08 16:57:29,083 	Raw hypothesis: ['3']
-2020-04-08 16:57:29,083 	Source:     3
-2020-04-08 16:57:29,083 	Reference:  3
-2020-04-08 16:57:29,083 	Hypothesis: 3
-2020-04-08 16:57:29,083 Validation result (greedy) at epoch   4, step      360: bleu: 100.00, loss:  13.1529, ppl:   1.0538, duration: 0.1464s
-2020-04-08 16:57:29,938 Epoch   4 Step:      370 Batch Loss:     0.088535 Tokens per Sec:      257, Lr: 0.000500
-2020-04-08 16:57:30,103 Example #0
-2020-04-08 16:57:30,103 	Raw source:     ['4', '3']
-2020-04-08 16:57:30,104 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:30,104 	Source:     4 3
-2020-04-08 16:57:30,104 	Reference:  3 4
-2020-04-08 16:57:30,104 	Hypothesis: 3 4
-2020-04-08 16:57:30,104 Example #3
-2020-04-08 16:57:30,104 	Raw source:     ['4']
-2020-04-08 16:57:30,104 	Raw hypothesis: ['4']
-2020-04-08 16:57:30,104 	Source:     4
-2020-04-08 16:57:30,105 	Reference:  4
-2020-04-08 16:57:30,105 	Hypothesis: 4
-2020-04-08 16:57:30,105 Example #6
-2020-04-08 16:57:30,105 	Raw source:     ['3']
-2020-04-08 16:57:30,105 	Raw hypothesis: ['3']
-2020-04-08 16:57:30,105 	Source:     3
-2020-04-08 16:57:30,106 	Reference:  3
-2020-04-08 16:57:30,106 	Hypothesis: 3
-2020-04-08 16:57:30,106 Validation result (greedy) at epoch   4, step      370: bleu: 100.00, loss:  12.1449, ppl:   1.0496, duration: 0.1666s
-2020-04-08 16:57:30,911 Epoch   4 Step:      380 Batch Loss:     0.288263 Tokens per Sec:      323, Lr: 0.000500
-2020-04-08 16:57:31,009 Example #0
-2020-04-08 16:57:31,009 	Raw source:     ['4', '3']
-2020-04-08 16:57:31,009 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:31,009 	Source:     4 3
-2020-04-08 16:57:31,009 	Reference:  3 4
-2020-04-08 16:57:31,009 	Hypothesis: 3 4
-2020-04-08 16:57:31,010 Example #3
-2020-04-08 16:57:31,010 	Raw source:     ['4']
-2020-04-08 16:57:31,010 	Raw hypothesis: ['4']
-2020-04-08 16:57:31,010 	Source:     4
-2020-04-08 16:57:31,010 	Reference:  4
-2020-04-08 16:57:31,010 	Hypothesis: 4
-2020-04-08 16:57:31,010 Example #6
-2020-04-08 16:57:31,010 	Raw source:     ['3']
-2020-04-08 16:57:31,011 	Raw hypothesis: ['3']
-2020-04-08 16:57:31,011 	Source:     3
-2020-04-08 16:57:31,011 	Reference:  3
-2020-04-08 16:57:31,011 	Hypothesis: 3
-2020-04-08 16:57:31,011 Validation result (greedy) at epoch   4, step      380: bleu: 100.00, loss:  11.2935, ppl:   1.0460, duration: 0.0992s
-2020-04-08 16:57:31,989 Epoch   4 Step:      390 Batch Loss:     0.340576 Tokens per Sec:      266, Lr: 0.000500
-2020-04-08 16:57:32,141 Example #0
-2020-04-08 16:57:32,141 	Raw source:     ['4', '3']
-2020-04-08 16:57:32,141 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:32,141 	Source:     4 3
-2020-04-08 16:57:32,142 	Reference:  3 4
-2020-04-08 16:57:32,142 	Hypothesis: 3 4
-2020-04-08 16:57:32,142 Example #3
-2020-04-08 16:57:32,142 	Raw source:     ['4']
-2020-04-08 16:57:32,142 	Raw hypothesis: ['4']
-2020-04-08 16:57:32,142 	Source:     4
-2020-04-08 16:57:32,142 	Reference:  4
-2020-04-08 16:57:32,143 	Hypothesis: 4
-2020-04-08 16:57:32,143 Example #6
-2020-04-08 16:57:32,143 	Raw source:     ['3']
-2020-04-08 16:57:32,143 	Raw hypothesis: ['3']
-2020-04-08 16:57:32,143 	Source:     3
-2020-04-08 16:57:32,143 	Reference:  3
-2020-04-08 16:57:32,143 	Hypothesis: 3
-2020-04-08 16:57:32,143 Validation result (greedy) at epoch   4, step      390: bleu: 100.00, loss:  10.2836, ppl:   1.0418, duration: 0.1540s
-2020-04-08 16:57:33,011 Epoch   4 Step:      400 Batch Loss:     0.272517 Tokens per Sec:      311, Lr: 0.000250
-2020-04-08 16:57:33,157 Example #0
-2020-04-08 16:57:33,158 	Raw source:     ['4', '3']
-2020-04-08 16:57:33,158 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:33,158 	Source:     4 3
-2020-04-08 16:57:33,158 	Reference:  3 4
-2020-04-08 16:57:33,158 	Hypothesis: 3 4
-2020-04-08 16:57:33,158 Example #3
-2020-04-08 16:57:33,158 	Raw source:     ['4']
-2020-04-08 16:57:33,158 	Raw hypothesis: ['4']
-2020-04-08 16:57:33,159 	Source:     4
-2020-04-08 16:57:33,159 	Reference:  4
-2020-04-08 16:57:33,159 	Hypothesis: 4
-2020-04-08 16:57:33,159 Example #6
-2020-04-08 16:57:33,159 	Raw source:     ['3']
-2020-04-08 16:57:33,159 	Raw hypothesis: ['3']
-2020-04-08 16:57:33,159 	Source:     3
-2020-04-08 16:57:33,159 	Reference:  3
-2020-04-08 16:57:33,160 	Hypothesis: 3
-2020-04-08 16:57:33,160 Validation result (greedy) at epoch   4, step      400: bleu: 100.00, loss:   9.9633, ppl:   1.0405, duration: 0.1477s
-2020-04-08 16:57:33,808 Epoch   4: total training loss 20.95
-2020-04-08 16:57:33,808 EPOCH 5
-2020-04-08 16:57:34,066 Epoch   5 Step:      410 Batch Loss:     0.043381 Tokens per Sec:      946, Lr: 0.000250
-2020-04-08 16:57:34,222 Example #0
-2020-04-08 16:57:34,222 	Raw source:     ['4', '3']
-2020-04-08 16:57:34,223 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:34,223 	Source:     4 3
-2020-04-08 16:57:34,223 	Reference:  3 4
-2020-04-08 16:57:34,223 	Hypothesis: 3 4
-2020-04-08 16:57:34,223 Example #3
-2020-04-08 16:57:34,223 	Raw source:     ['4']
-2020-04-08 16:57:34,223 	Raw hypothesis: ['4']
-2020-04-08 16:57:34,223 	Source:     4
-2020-04-08 16:57:34,224 	Reference:  4
-2020-04-08 16:57:34,224 	Hypothesis: 4
-2020-04-08 16:57:34,224 Example #6
-2020-04-08 16:57:34,224 	Raw source:     ['3']
-2020-04-08 16:57:34,224 	Raw hypothesis: ['3']
-2020-04-08 16:57:34,224 	Source:     3
-2020-04-08 16:57:34,224 	Reference:  3
-2020-04-08 16:57:34,224 	Hypothesis: 3
-2020-04-08 16:57:34,225 Validation result (greedy) at epoch   5, step      410: bleu: 100.00, loss:   9.5005, ppl:   1.0386, duration: 0.1581s
-2020-04-08 16:57:35,159 Epoch   5 Step:      420 Batch Loss:     0.071029 Tokens per Sec:      257, Lr: 0.000250
-2020-04-08 16:57:35,312 Example #0
-2020-04-08 16:57:35,312 	Raw source:     ['4', '3']
-2020-04-08 16:57:35,312 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:35,312 	Source:     4 3
-2020-04-08 16:57:35,312 	Reference:  3 4
-2020-04-08 16:57:35,313 	Hypothesis: 3 4
-2020-04-08 16:57:35,313 Example #3
-2020-04-08 16:57:35,313 	Raw source:     ['4']
-2020-04-08 16:57:35,313 	Raw hypothesis: ['4']
-2020-04-08 16:57:35,313 	Source:     4
-2020-04-08 16:57:35,313 	Reference:  4
-2020-04-08 16:57:35,313 	Hypothesis: 4
-2020-04-08 16:57:35,313 Example #6
-2020-04-08 16:57:35,314 	Raw source:     ['3']
-2020-04-08 16:57:35,314 	Raw hypothesis: ['3']
-2020-04-08 16:57:35,314 	Source:     3
-2020-04-08 16:57:35,314 	Reference:  3
-2020-04-08 16:57:35,314 	Hypothesis: 3
-2020-04-08 16:57:35,314 Validation result (greedy) at epoch   5, step      420: bleu: 100.00, loss:   9.1697, ppl:   1.0372, duration: 0.1541s
-2020-04-08 16:57:36,180 Epoch   5 Step:      430 Batch Loss:     0.051278 Tokens per Sec:      289, Lr: 0.000250
-2020-04-08 16:57:36,308 Example #0
-2020-04-08 16:57:36,309 	Raw source:     ['4', '3']
-2020-04-08 16:57:36,309 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:36,309 	Source:     4 3
-2020-04-08 16:57:36,309 	Reference:  3 4
-2020-04-08 16:57:36,309 	Hypothesis: 3 4
-2020-04-08 16:57:36,309 Example #3
-2020-04-08 16:57:36,309 	Raw source:     ['4']
-2020-04-08 16:57:36,309 	Raw hypothesis: ['4']
-2020-04-08 16:57:36,310 	Source:     4
-2020-04-08 16:57:36,310 	Reference:  4
-2020-04-08 16:57:36,310 	Hypothesis: 4
-2020-04-08 16:57:36,310 Example #6
-2020-04-08 16:57:36,310 	Raw source:     ['3']
-2020-04-08 16:57:36,310 	Raw hypothesis: ['3']
-2020-04-08 16:57:36,310 	Source:     3
-2020-04-08 16:57:36,310 	Reference:  3
-2020-04-08 16:57:36,310 	Hypothesis: 3
-2020-04-08 16:57:36,311 Validation result (greedy) at epoch   5, step      430: bleu: 100.00, loss:   8.9480, ppl:   1.0363, duration: 0.1300s
-2020-04-08 16:57:37,153 Epoch   5 Step:      440 Batch Loss:     0.048829 Tokens per Sec:      273, Lr: 0.000250
-2020-04-08 16:57:37,301 Example #0
-2020-04-08 16:57:37,302 	Raw source:     ['4', '3']
-2020-04-08 16:57:37,302 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:37,302 	Source:     4 3
-2020-04-08 16:57:37,302 	Reference:  3 4
-2020-04-08 16:57:37,302 	Hypothesis: 3 4
-2020-04-08 16:57:37,302 Example #3
-2020-04-08 16:57:37,302 	Raw source:     ['4']
-2020-04-08 16:57:37,302 	Raw hypothesis: ['4']
-2020-04-08 16:57:37,303 	Source:     4
-2020-04-08 16:57:37,303 	Reference:  4
-2020-04-08 16:57:37,303 	Hypothesis: 4
-2020-04-08 16:57:37,303 Example #6
-2020-04-08 16:57:37,303 	Raw source:     ['3']
-2020-04-08 16:57:37,303 	Raw hypothesis: ['3']
-2020-04-08 16:57:37,303 	Source:     3
-2020-04-08 16:57:37,303 	Reference:  3
-2020-04-08 16:57:37,303 	Hypothesis: 3
-2020-04-08 16:57:37,304 Validation result (greedy) at epoch   5, step      440: bleu: 100.00, loss:   8.5164, ppl:   1.0345, duration: 0.1496s
-2020-04-08 16:57:38,218 Epoch   5 Step:      450 Batch Loss:     0.163108 Tokens per Sec:      295, Lr: 0.000250
-2020-04-08 16:57:38,369 Example #0
-2020-04-08 16:57:38,370 	Raw source:     ['4', '3']
-2020-04-08 16:57:38,370 	Raw hypothesis: ['3', '4']
-2020-04-08 16:57:38,370 	Source:     4 3
-2020-04-08 16:57:38,370 	Reference:  3 4
-2020-04-08 16:57:38,370 	Hypothesis: 3 4
-2020-04-08 16:57:38,370 Example #3
-2020-04-08 16:57:38,371 	Raw source:     ['4']
-2020-04-08 16:57:38,371 	Raw hypothesis: ['4']
-2020-04-08 16:57:38,371 	Source:     4
-2020-04-08 16:57:38,371 	Reference:  4
-2020-04-08 16:57:38,371 	Hypothesis: 4
-2020-04-08 16:57:38,371 Example #6
-2020-04-08 16:57:38,371 	Raw source:     ['3']
-2020-04-08 16:57:38,371 	Raw hypothesis: ['3']
-2020-04-08 16:57:38,372 	Source:     3
-2020-04-08 16:57:38,372 	Reference:  3
-2020-04-08 16:57:38,372 	Hypothesis: 3
-2020-04-08 16:57:38,372 Validation result (greedy) at epoch   5, step      450: bleu: 100.00, loss:   8.2182, ppl:   1.0333, duration: 0.1523s
-2020-04-08 16:57:39,011 Training ended since minimum lr 0.000200 was reached.
-2020-04-08 16:57:39,011 Best validation result (greedy) at step      270: 100.00 eval_metric.
-2020-04-08 16:57:39,097  dev bleu: 100.00 [Greedy decoding]
-2020-04-08 16:57:39,097 Translations saved to: mini_reverse_model/00000270.hyps.dev
-2020-04-08 16:57:39,171 test bleu: 100.00 [Greedy decoding]
-2020-04-08 16:57:39,171 Translations saved to: mini_reverse_model/00000270.hyps.test
+2020-04-13 18:25:13,189 EPOCH 1
+2020-04-13 18:25:13,466 Epoch   1 Step:       10 Batch Loss:     6.441356 Tokens per Sec:      941, Lr: 0.001000
+2020-04-13 18:25:13,753 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:13,754 Saving new checkpoint.
+2020-04-13 18:25:13,759 Example #0
+2020-04-13 18:25:13,759 	Raw source:     ['3']
+2020-04-13 18:25:13,759 	Raw hypothesis: []
+2020-04-13 18:25:13,760 	Source:     3
+2020-04-13 18:25:13,760 	Reference:  3
+2020-04-13 18:25:13,760 	Hypothesis: 
+2020-04-13 18:25:13,760 Example #3
+2020-04-13 18:25:13,760 	Raw source:     ['4', '3']
+2020-04-13 18:25:13,760 	Raw hypothesis: ['4']
+2020-04-13 18:25:13,760 	Source:     4 3
+2020-04-13 18:25:13,760 	Reference:  3 4
+2020-04-13 18:25:13,760 	Hypothesis: 4
+2020-04-13 18:25:13,760 Example #6
+2020-04-13 18:25:13,760 	Raw source:     ['4']
+2020-04-13 18:25:13,760 	Raw hypothesis: ['4']
+2020-04-13 18:25:13,760 	Source:     4
+2020-04-13 18:25:13,761 	Reference:  4
+2020-04-13 18:25:13,761 	Hypothesis: 4
+2020-04-13 18:25:13,761 Validation result (greedy) at epoch   1, step       10: bleu:   0.00, loss: 545.5809, ppl:   8.2867, duration: 0.2942s
+2020-04-13 18:25:14,725 Epoch   1 Step:       20 Batch Loss:     3.992671 Tokens per Sec:      270, Lr: 0.001000
+2020-04-13 18:25:14,847 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:14,848 Saving new checkpoint.
+2020-04-13 18:25:14,856 Example #0
+2020-04-13 18:25:14,858 	Raw source:     ['3']
+2020-04-13 18:25:14,858 	Raw hypothesis: []
+2020-04-13 18:25:14,858 	Source:     3
+2020-04-13 18:25:14,859 	Reference:  3
+2020-04-13 18:25:14,859 	Hypothesis: 
+2020-04-13 18:25:14,859 Example #3
+2020-04-13 18:25:14,859 	Raw source:     ['4', '3']
+2020-04-13 18:25:14,859 	Raw hypothesis: []
+2020-04-13 18:25:14,859 	Source:     4 3
+2020-04-13 18:25:14,859 	Reference:  3 4
+2020-04-13 18:25:14,860 	Hypothesis: 
+2020-04-13 18:25:14,860 Example #6
+2020-04-13 18:25:14,861 	Raw source:     ['4']
+2020-04-13 18:25:14,861 	Raw hypothesis: []
+2020-04-13 18:25:14,862 	Source:     4
+2020-04-13 18:25:14,862 	Reference:  4
+2020-04-13 18:25:14,862 	Hypothesis: 
+2020-04-13 18:25:14,862 Validation result (greedy) at epoch   1, step       20: bleu:   0.00, loss: 518.6237, ppl:   7.4646, duration: 0.1361s
+2020-04-13 18:25:15,468 Epoch   1 Step:       30 Batch Loss:     5.561986 Tokens per Sec:      380, Lr: 0.001000
+2020-04-13 18:25:15,573 Example #0
+2020-04-13 18:25:15,573 	Raw source:     ['3']
+2020-04-13 18:25:15,574 	Raw hypothesis: []
+2020-04-13 18:25:15,574 	Source:     3
+2020-04-13 18:25:15,574 	Reference:  3
+2020-04-13 18:25:15,574 	Hypothesis: 
+2020-04-13 18:25:15,575 Example #3
+2020-04-13 18:25:15,575 	Raw source:     ['4', '3']
+2020-04-13 18:25:15,575 	Raw hypothesis: []
+2020-04-13 18:25:15,575 	Source:     4 3
+2020-04-13 18:25:15,575 	Reference:  3 4
+2020-04-13 18:25:15,575 	Hypothesis: 
+2020-04-13 18:25:15,576 Example #6
+2020-04-13 18:25:15,576 	Raw source:     ['4']
+2020-04-13 18:25:15,576 	Raw hypothesis: []
+2020-04-13 18:25:15,576 	Source:     4
+2020-04-13 18:25:15,576 	Reference:  4
+2020-04-13 18:25:15,576 	Hypothesis: 
+2020-04-13 18:25:15,577 Validation result (greedy) at epoch   1, step       30: bleu:   0.00, loss: 476.5564, ppl:   6.3415, duration: 0.1085s
+2020-04-13 18:25:16,208 Epoch   1 Step:       40 Batch Loss:     5.517644 Tokens per Sec:      427, Lr: 0.001000
+2020-04-13 18:25:16,369 Example #0
+2020-04-13 18:25:16,370 	Raw source:     ['3']
+2020-04-13 18:25:16,370 	Raw hypothesis: []
+2020-04-13 18:25:16,370 	Source:     3
+2020-04-13 18:25:16,370 	Reference:  3
+2020-04-13 18:25:16,371 	Hypothesis: 
+2020-04-13 18:25:16,371 Example #3
+2020-04-13 18:25:16,371 	Raw source:     ['4', '3']
+2020-04-13 18:25:16,371 	Raw hypothesis: []
+2020-04-13 18:25:16,371 	Source:     4 3
+2020-04-13 18:25:16,371 	Reference:  3 4
+2020-04-13 18:25:16,371 	Hypothesis: 
+2020-04-13 18:25:16,372 Example #6
+2020-04-13 18:25:16,372 	Raw source:     ['4']
+2020-04-13 18:25:16,372 	Raw hypothesis: []
+2020-04-13 18:25:16,372 	Source:     4
+2020-04-13 18:25:16,372 	Reference:  4
+2020-04-13 18:25:16,372 	Hypothesis: 
+2020-04-13 18:25:16,373 Validation result (greedy) at epoch   1, step       40: bleu:   0.00, loss: 425.6389, ppl:   5.2057, duration: 0.1638s
+2020-04-13 18:25:17,059 Epoch   1 Step:       50 Batch Loss:     5.181530 Tokens per Sec:      350, Lr: 0.001000
+2020-04-13 18:25:17,195 Example #0
+2020-04-13 18:25:17,197 	Raw source:     ['3']
+2020-04-13 18:25:17,197 	Raw hypothesis: []
+2020-04-13 18:25:17,197 	Source:     3
+2020-04-13 18:25:17,197 	Reference:  3
+2020-04-13 18:25:17,197 	Hypothesis: 
+2020-04-13 18:25:17,197 Example #3
+2020-04-13 18:25:17,197 	Raw source:     ['4', '3']
+2020-04-13 18:25:17,198 	Raw hypothesis: []
+2020-04-13 18:25:17,198 	Source:     4 3
+2020-04-13 18:25:17,198 	Reference:  3 4
+2020-04-13 18:25:17,198 	Hypothesis: 
+2020-04-13 18:25:17,198 Example #6
+2020-04-13 18:25:17,198 	Raw source:     ['4']
+2020-04-13 18:25:17,198 	Raw hypothesis: []
+2020-04-13 18:25:17,198 	Source:     4
+2020-04-13 18:25:17,199 	Reference:  4
+2020-04-13 18:25:17,199 	Hypothesis: 
+2020-04-13 18:25:17,199 Validation result (greedy) at epoch   1, step       50: bleu:   0.00, loss: 392.8317, ppl:   4.5841, duration: 0.1395s
+2020-04-13 18:25:17,836 Epoch   1 Step:       60 Batch Loss:     2.331442 Tokens per Sec:      377, Lr: 0.001000
+2020-04-13 18:25:17,975 Example #0
+2020-04-13 18:25:17,976 	Raw source:     ['3']
+2020-04-13 18:25:17,976 	Raw hypothesis: []
+2020-04-13 18:25:17,976 	Source:     3
+2020-04-13 18:25:17,976 	Reference:  3
+2020-04-13 18:25:17,976 	Hypothesis: 
+2020-04-13 18:25:17,977 Example #3
+2020-04-13 18:25:17,977 	Raw source:     ['4', '3']
+2020-04-13 18:25:17,978 	Raw hypothesis: []
+2020-04-13 18:25:17,979 	Source:     4 3
+2020-04-13 18:25:17,979 	Reference:  3 4
+2020-04-13 18:25:17,979 	Hypothesis: 
+2020-04-13 18:25:17,979 Example #6
+2020-04-13 18:25:17,980 	Raw source:     ['4']
+2020-04-13 18:25:17,980 	Raw hypothesis: []
+2020-04-13 18:25:17,980 	Source:     4
+2020-04-13 18:25:17,980 	Reference:  4
+2020-04-13 18:25:17,980 	Hypothesis: 
+2020-04-13 18:25:17,980 Validation result (greedy) at epoch   1, step       60: bleu:   0.00, loss: 371.3457, ppl:   4.2178, duration: 0.1440s
+2020-04-13 18:25:18,551 Epoch   1 Step:       70 Batch Loss:     2.297588 Tokens per Sec:      420, Lr: 0.001000
+2020-04-13 18:25:18,711 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:18,711 Saving new checkpoint.
+2020-04-13 18:25:18,717 Example #0
+2020-04-13 18:25:18,718 	Raw source:     ['3']
+2020-04-13 18:25:18,718 	Raw hypothesis: []
+2020-04-13 18:25:18,718 	Source:     3
+2020-04-13 18:25:18,718 	Reference:  3
+2020-04-13 18:25:18,718 	Hypothesis: 
+2020-04-13 18:25:18,718 Example #3
+2020-04-13 18:25:18,719 	Raw source:     ['4', '3']
+2020-04-13 18:25:18,719 	Raw hypothesis: []
+2020-04-13 18:25:18,719 	Source:     4 3
+2020-04-13 18:25:18,719 	Reference:  3 4
+2020-04-13 18:25:18,719 	Hypothesis: 
+2020-04-13 18:25:18,719 Example #6
+2020-04-13 18:25:18,719 	Raw source:     ['4']
+2020-04-13 18:25:18,720 	Raw hypothesis: []
+2020-04-13 18:25:18,720 	Source:     4
+2020-04-13 18:25:18,720 	Reference:  4
+2020-04-13 18:25:18,720 	Hypothesis: 
+2020-04-13 18:25:18,720 Validation result (greedy) at epoch   1, step       70: bleu:   0.40, loss: 349.4524, ppl:   3.8747, duration: 0.1675s
+2020-04-13 18:25:19,353 Epoch   1 Step:       80 Batch Loss:     4.233541 Tokens per Sec:      427, Lr: 0.001000
+2020-04-13 18:25:19,517 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:19,519 Saving new checkpoint.
+2020-04-13 18:25:19,525 Example #0
+2020-04-13 18:25:19,525 	Raw source:     ['3']
+2020-04-13 18:25:19,525 	Raw hypothesis: []
+2020-04-13 18:25:19,526 	Source:     3
+2020-04-13 18:25:19,526 	Reference:  3
+2020-04-13 18:25:19,526 	Hypothesis: 
+2020-04-13 18:25:19,526 Example #3
+2020-04-13 18:25:19,526 	Raw source:     ['4', '3']
+2020-04-13 18:25:19,526 	Raw hypothesis: []
+2020-04-13 18:25:19,526 	Source:     4 3
+2020-04-13 18:25:19,526 	Reference:  3 4
+2020-04-13 18:25:19,527 	Hypothesis: 
+2020-04-13 18:25:19,527 Example #6
+2020-04-13 18:25:19,527 	Raw source:     ['4']
+2020-04-13 18:25:19,527 	Raw hypothesis: []
+2020-04-13 18:25:19,527 	Source:     4
+2020-04-13 18:25:19,527 	Reference:  4
+2020-04-13 18:25:19,527 	Hypothesis: 
+2020-04-13 18:25:19,527 Validation result (greedy) at epoch   1, step       80: bleu:  10.93, loss: 327.0223, ppl:   3.5521, duration: 0.1738s
+2020-04-13 18:25:20,112 Epoch   1 Step:       90 Batch Loss:     2.226098 Tokens per Sec:      432, Lr: 0.001000
+2020-04-13 18:25:20,302 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:20,302 Saving new checkpoint.
+2020-04-13 18:25:20,306 Example #0
+2020-04-13 18:25:20,307 	Raw source:     ['3']
+2020-04-13 18:25:20,307 	Raw hypothesis: ['0']
+2020-04-13 18:25:20,307 	Source:     3
+2020-04-13 18:25:20,307 	Reference:  3
+2020-04-13 18:25:20,307 	Hypothesis: 0
+2020-04-13 18:25:20,308 Example #3
+2020-04-13 18:25:20,308 	Raw source:     ['4', '3']
+2020-04-13 18:25:20,308 	Raw hypothesis: ['4']
+2020-04-13 18:25:20,308 	Source:     4 3
+2020-04-13 18:25:20,308 	Reference:  3 4
+2020-04-13 18:25:20,308 	Hypothesis: 4
+2020-04-13 18:25:20,308 Example #6
+2020-04-13 18:25:20,308 	Raw source:     ['4']
+2020-04-13 18:25:20,308 	Raw hypothesis: ['4']
+2020-04-13 18:25:20,308 	Source:     4
+2020-04-13 18:25:20,308 	Reference:  4
+2020-04-13 18:25:20,309 	Hypothesis: 4
+2020-04-13 18:25:20,309 Validation result (greedy) at epoch   1, step       90: bleu:  41.02, loss: 307.4561, ppl:   3.2926, duration: 0.1930s
+2020-04-13 18:25:21,128 Epoch   1 Step:      100 Batch Loss:     3.818772 Tokens per Sec:      281, Lr: 0.001000
+2020-04-13 18:25:21,278 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:21,280 Saving new checkpoint.
+2020-04-13 18:25:21,286 Example #0
+2020-04-13 18:25:21,286 	Raw source:     ['3']
+2020-04-13 18:25:21,287 	Raw hypothesis: ['3']
+2020-04-13 18:25:21,287 	Source:     3
+2020-04-13 18:25:21,287 	Reference:  3
+2020-04-13 18:25:21,287 	Hypothesis: 3
+2020-04-13 18:25:21,287 Example #3
+2020-04-13 18:25:21,287 	Raw source:     ['4', '3']
+2020-04-13 18:25:21,287 	Raw hypothesis: ['4']
+2020-04-13 18:25:21,287 	Source:     4 3
+2020-04-13 18:25:21,288 	Reference:  3 4
+2020-04-13 18:25:21,288 	Hypothesis: 4
+2020-04-13 18:25:21,288 Example #6
+2020-04-13 18:25:21,288 	Raw source:     ['4']
+2020-04-13 18:25:21,288 	Raw hypothesis: ['4']
+2020-04-13 18:25:21,288 	Source:     4
+2020-04-13 18:25:21,288 	Reference:  4
+2020-04-13 18:25:21,288 	Hypothesis: 4
+2020-04-13 18:25:21,288 Validation result (greedy) at epoch   1, step      100: bleu:  49.23, loss: 287.6997, ppl:   3.0499, duration: 0.1600s
+2020-04-13 18:25:21,974 Epoch   1: total training loss 405.36
+2020-04-13 18:25:21,974 EPOCH 2
+2020-04-13 18:25:22,243 Epoch   2 Step:      110 Batch Loss:     3.668725 Tokens per Sec:      892, Lr: 0.001000
+2020-04-13 18:25:22,405 Example #0
+2020-04-13 18:25:22,406 	Raw source:     ['3']
+2020-04-13 18:25:22,406 	Raw hypothesis: ['4']
+2020-04-13 18:25:22,406 	Source:     3
+2020-04-13 18:25:22,406 	Reference:  3
+2020-04-13 18:25:22,407 	Hypothesis: 4
+2020-04-13 18:25:22,407 Example #3
+2020-04-13 18:25:22,407 	Raw source:     ['4', '3']
+2020-04-13 18:25:22,407 	Raw hypothesis: ['4']
+2020-04-13 18:25:22,407 	Source:     4 3
+2020-04-13 18:25:22,407 	Reference:  3 4
+2020-04-13 18:25:22,408 	Hypothesis: 4
+2020-04-13 18:25:22,408 Example #6
+2020-04-13 18:25:22,409 	Raw source:     ['4']
+2020-04-13 18:25:22,409 	Raw hypothesis: ['4']
+2020-04-13 18:25:22,410 	Source:     4
+2020-04-13 18:25:22,410 	Reference:  4
+2020-04-13 18:25:22,411 	Hypothesis: 4
+2020-04-13 18:25:22,411 Validation result (greedy) at epoch   2, step      110: bleu:  43.36, loss: 279.4057, ppl:   2.9534, duration: 0.1669s
+2020-04-13 18:25:23,286 Epoch   2 Step:      120 Batch Loss:     3.464726 Tokens per Sec:      331, Lr: 0.001000
+2020-04-13 18:25:23,458 Example #0
+2020-04-13 18:25:23,459 	Raw source:     ['3']
+2020-04-13 18:25:23,459 	Raw hypothesis: ['4']
+2020-04-13 18:25:23,459 	Source:     3
+2020-04-13 18:25:23,460 	Reference:  3
+2020-04-13 18:25:23,460 	Hypothesis: 4
+2020-04-13 18:25:23,460 Example #3
+2020-04-13 18:25:23,461 	Raw source:     ['4', '3']
+2020-04-13 18:25:23,461 	Raw hypothesis: ['4']
+2020-04-13 18:25:23,461 	Source:     4 3
+2020-04-13 18:25:23,461 	Reference:  3 4
+2020-04-13 18:25:23,461 	Hypothesis: 4
+2020-04-13 18:25:23,461 Example #6
+2020-04-13 18:25:23,461 	Raw source:     ['4']
+2020-04-13 18:25:23,461 	Raw hypothesis: ['4']
+2020-04-13 18:25:23,462 	Source:     4
+2020-04-13 18:25:23,464 	Reference:  4
+2020-04-13 18:25:23,464 	Hypothesis: 4
+2020-04-13 18:25:23,464 Validation result (greedy) at epoch   2, step      120: bleu:  26.61, loss: 256.6686, ppl:   2.7043, duration: 0.1763s
+2020-04-13 18:25:24,375 Epoch   2 Step:      130 Batch Loss:     3.170238 Tokens per Sec:      285, Lr: 0.001000
+2020-04-13 18:25:24,563 Example #0
+2020-04-13 18:25:24,564 	Raw source:     ['3']
+2020-04-13 18:25:24,564 	Raw hypothesis: ['3']
+2020-04-13 18:25:24,564 	Source:     3
+2020-04-13 18:25:24,564 	Reference:  3
+2020-04-13 18:25:24,564 	Hypothesis: 3
+2020-04-13 18:25:24,564 Example #3
+2020-04-13 18:25:24,565 	Raw source:     ['4', '3']
+2020-04-13 18:25:24,565 	Raw hypothesis: ['4', '4']
+2020-04-13 18:25:24,565 	Source:     4 3
+2020-04-13 18:25:24,565 	Reference:  3 4
+2020-04-13 18:25:24,565 	Hypothesis: 4 4
+2020-04-13 18:25:24,565 Example #6
+2020-04-13 18:25:24,565 	Raw source:     ['4']
+2020-04-13 18:25:24,565 	Raw hypothesis: ['4']
+2020-04-13 18:25:24,565 	Source:     4
+2020-04-13 18:25:24,566 	Reference:  4
+2020-04-13 18:25:24,566 	Hypothesis: 4
+2020-04-13 18:25:24,566 Validation result (greedy) at epoch   2, step      130: bleu:  46.17, loss: 248.9877, ppl:   2.6250, duration: 0.1896s
+2020-04-13 18:25:25,554 Epoch   2 Step:      140 Batch Loss:     1.406059 Tokens per Sec:      243, Lr: 0.001000
+2020-04-13 18:25:25,727 Example #0
+2020-04-13 18:25:25,727 	Raw source:     ['3']
+2020-04-13 18:25:25,727 	Raw hypothesis: ['3']
+2020-04-13 18:25:25,727 	Source:     3
+2020-04-13 18:25:25,728 	Reference:  3
+2020-04-13 18:25:25,728 	Hypothesis: 3
+2020-04-13 18:25:25,728 Example #3
+2020-04-13 18:25:25,728 	Raw source:     ['4', '3']
+2020-04-13 18:25:25,728 	Raw hypothesis: ['4']
+2020-04-13 18:25:25,728 	Source:     4 3
+2020-04-13 18:25:25,728 	Reference:  3 4
+2020-04-13 18:25:25,729 	Hypothesis: 4
+2020-04-13 18:25:25,729 Example #6
+2020-04-13 18:25:25,729 	Raw source:     ['4']
+2020-04-13 18:25:25,729 	Raw hypothesis: ['4']
+2020-04-13 18:25:25,729 	Source:     4
+2020-04-13 18:25:25,729 	Reference:  4
+2020-04-13 18:25:25,729 	Hypothesis: 4
+2020-04-13 18:25:25,729 Validation result (greedy) at epoch   2, step      140: bleu:  48.11, loss: 226.3850, ppl:   2.4048, duration: 0.1751s
+2020-04-13 18:25:26,568 Epoch   2 Step:      150 Batch Loss:     3.497104 Tokens per Sec:      278, Lr: 0.001000
+2020-04-13 18:25:26,744 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:26,745 Saving new checkpoint.
+2020-04-13 18:25:26,752 Example #0
+2020-04-13 18:25:26,752 	Raw source:     ['3']
+2020-04-13 18:25:26,752 	Raw hypothesis: ['3']
+2020-04-13 18:25:26,752 	Source:     3
+2020-04-13 18:25:26,752 	Reference:  3
+2020-04-13 18:25:26,753 	Hypothesis: 3
+2020-04-13 18:25:26,753 Example #3
+2020-04-13 18:25:26,753 	Raw source:     ['4', '3']
+2020-04-13 18:25:26,753 	Raw hypothesis: ['4']
+2020-04-13 18:25:26,753 	Source:     4 3
+2020-04-13 18:25:26,753 	Reference:  3 4
+2020-04-13 18:25:26,753 	Hypothesis: 4
+2020-04-13 18:25:26,753 Example #6
+2020-04-13 18:25:26,754 	Raw source:     ['4']
+2020-04-13 18:25:26,754 	Raw hypothesis: ['4']
+2020-04-13 18:25:26,754 	Source:     4
+2020-04-13 18:25:26,754 	Reference:  4
+2020-04-13 18:25:26,754 	Hypothesis: 4
+2020-04-13 18:25:26,754 Validation result (greedy) at epoch   2, step      150: bleu:  56.84, loss: 246.4078, ppl:   2.5989, duration: 0.1852s
+2020-04-13 18:25:27,696 Epoch   2 Step:      160 Batch Loss:     3.078710 Tokens per Sec:      255, Lr: 0.001000
+2020-04-13 18:25:27,862 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:27,862 Saving new checkpoint.
+2020-04-13 18:25:27,869 Example #0
+2020-04-13 18:25:27,869 	Raw source:     ['3']
+2020-04-13 18:25:27,869 	Raw hypothesis: ['3']
+2020-04-13 18:25:27,869 	Source:     3
+2020-04-13 18:25:27,869 	Reference:  3
+2020-04-13 18:25:27,869 	Hypothesis: 3
+2020-04-13 18:25:27,870 Example #3
+2020-04-13 18:25:27,870 	Raw source:     ['4', '3']
+2020-04-13 18:25:27,870 	Raw hypothesis: ['4']
+2020-04-13 18:25:27,870 	Source:     4 3
+2020-04-13 18:25:27,870 	Reference:  3 4
+2020-04-13 18:25:27,870 	Hypothesis: 4
+2020-04-13 18:25:27,870 Example #6
+2020-04-13 18:25:27,870 	Raw source:     ['4']
+2020-04-13 18:25:27,870 	Raw hypothesis: ['4']
+2020-04-13 18:25:27,870 	Source:     4
+2020-04-13 18:25:27,871 	Reference:  4
+2020-04-13 18:25:27,871 	Hypothesis: 4
+2020-04-13 18:25:27,871 Validation result (greedy) at epoch   2, step      160: bleu:  59.19, loss: 229.0908, ppl:   2.4301, duration: 0.1749s
+2020-04-13 18:25:28,715 Epoch   2 Step:      170 Batch Loss:     1.023235 Tokens per Sec:      320, Lr: 0.001000
+2020-04-13 18:25:28,891 Example #0
+2020-04-13 18:25:28,891 	Raw source:     ['3']
+2020-04-13 18:25:28,892 	Raw hypothesis: ['3']
+2020-04-13 18:25:28,892 	Source:     3
+2020-04-13 18:25:28,892 	Reference:  3
+2020-04-13 18:25:28,892 	Hypothesis: 3
+2020-04-13 18:25:28,892 Example #3
+2020-04-13 18:25:28,892 	Raw source:     ['4', '3']
+2020-04-13 18:25:28,892 	Raw hypothesis: ['4']
+2020-04-13 18:25:28,892 	Source:     4 3
+2020-04-13 18:25:28,892 	Reference:  3 4
+2020-04-13 18:25:28,893 	Hypothesis: 4
+2020-04-13 18:25:28,893 Example #6
+2020-04-13 18:25:28,893 	Raw source:     ['4']
+2020-04-13 18:25:28,893 	Raw hypothesis: ['4']
+2020-04-13 18:25:28,893 	Source:     4
+2020-04-13 18:25:28,893 	Reference:  4
+2020-04-13 18:25:28,893 	Hypothesis: 4
+2020-04-13 18:25:28,893 Validation result (greedy) at epoch   2, step      170: bleu:  41.50, loss: 186.3410, ppl:   2.0591, duration: 0.1776s
+2020-04-13 18:25:29,424 Epoch   2 Step:      180 Batch Loss:     2.322095 Tokens per Sec:      414, Lr: 0.001000
+2020-04-13 18:25:29,533 Hooray! New best validation result [eval_metric]!
+2020-04-13 18:25:29,534 Saving new checkpoint.
+2020-04-13 18:25:29,538 Example #0
+2020-04-13 18:25:29,538 	Raw source:     ['3']
+2020-04-13 18:25:29,538 	Raw hypothesis: ['3']
+2020-04-13 18:25:29,538 	Source:     3
+2020-04-13 18:25:29,539 	Reference:  3
+2020-04-13 18:25:29,539 	Hypothesis: 3
+2020-04-13 18:25:29,539 Example #3
+2020-04-13 18:25:29,539 	Raw source:     ['4', '3']
+2020-04-13 18:25:29,539 	Raw hypothesis: ['4']
+2020-04-13 18:25:29,539 	Source:     4 3
+2020-04-13 18:25:29,539 	Reference:  3 4
+2020-04-13 18:25:29,539 	Hypothesis: 4
+2020-04-13 18:25:29,540 Example #6
+2020-04-13 18:25:29,540 	Raw source:     ['4']
+2020-04-13 18:25:29,540 	Raw hypothesis: ['4']
+2020-04-13 18:25:29,540 	Source:     4
+2020-04-13 18:25:29,540 	Reference:  4
+2020-04-13 18:25:29,540 	Hypothesis: 4
+2020-04-13 18:25:29,541 Validation result (greedy) at epoch   2, step      180: bleu:  59.22, loss: 177.5274, ppl:   1.9899, duration: 0.1159s
+2020-04-13 18:25:30,251 Epoch   2 Step:      190 Batch Loss:     0.711911 Tokens per Sec:      352, Lr: 0.001000
+2020-04-13 18:25:30,363 Example #0
+2020-04-13 18:25:30,363 	Raw source:     ['3']
+2020-04-13 18:25:30,363 	Raw hypothesis: ['3']
+2020-04-13 18:25:30,363 	Source:     3
+2020-04-13 18:25:30,363 	Reference:  3
+2020-04-13 18:25:30,363 	Hypothesis: 3
+2020-04-13 18:25:30,364 Example #3
+2020-04-13 18:25:30,364 	Raw source:     ['4', '3']
+2020-04-13 18:25:30,364 	Raw hypothesis: ['4']
+2020-04-13 18:25:30,364 	Source:     4 3
+2020-04-13 18:25:30,365 	Reference:  3 4
+2020-04-13 18:25:30,365 	Hypothesis: 4
+2020-04-13 18:25:30,365 Example #6
+2020-04-13 18:25:30,365 	Raw source:     ['4']
+2020-04-13 18:25:30,365 	Raw hypothesis: ['4']
+2020-04-13 18:25:30,365 	Source:     4
+2020-04-13 18:25:30,366 	Reference:  4
+2020-04-13 18:25:30,366 	Hypothesis: 4
+2020-04-13 18:25:30,366 Validation result (greedy) at epoch   2, step      190: bleu:  51.35, loss: 165.7404, ppl:   1.9010, duration: 0.1141s
+2020-04-13 18:25:31,154 Epoch   2 Step:      200 Batch Loss:     2.216409 Tokens per Sec:      317, Lr: 0.001000
