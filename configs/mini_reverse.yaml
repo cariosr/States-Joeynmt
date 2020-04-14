@@ -75,17 +75,17 @@ model:
         init_hidden: "bridge"
         attention: "luong"
 dqn:
-    epochs: 2000
-    sample_size: 256
+    num_episodes: 100
+    sample_size: 32
     lr: 0.01
     egreed_max: 0.9
     egreed_min: 0.001
     gamma_max: 0.9
     gamma_min: 0.3
     nu_iter: 300
-    mem_cap: 5000
+    mem_cap: 2000
     beam_min: 1
     beam_max: 50
     state_type: 'hidden'
-    reward_type: 'bleu_diff'
-    nu_pretrain: 2000
+    reward_type: 'correct_action'
+    nu_pretrain: 0
