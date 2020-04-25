@@ -75,9 +75,9 @@ model:
         init_hidden: "bridge"
         attention: "luong"
 dqn:
-    epochs: 2000
+    epochs: 500
     sample_size: 256
-    lr: 0.001
+    lr: 0.00005
     egreed_max: 0.9
     egreed_min: 0.001
     gamma_max: 0.9
@@ -87,6 +87,6 @@ dqn:
     beam_min: 1
     beam_max: 50
     state_type: 'attention'
-    reward_type: 'bleu_seq'
-    nu_pretrain: 500
-    other_descrip: '_exp_4_1_'
+    reward_type: 'bleu_batch'
+    nu_pretrain: 0
+    other_descrip: '_100_LSTM_'
