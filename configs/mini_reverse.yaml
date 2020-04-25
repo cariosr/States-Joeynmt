@@ -86,7 +86,7 @@ dqn:
     mem_cap: 5000
     beam_min: 1
     beam_max: 50
-    state_type: 'attention'
+    state_type: 'hidden'
     reward_type: 'bleu_batch'
     nu_pretrain: 0
     other_descrip: '_100_LSTM_'

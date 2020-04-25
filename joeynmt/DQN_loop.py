@@ -163,10 +163,12 @@ class QManager(object):
         self.nu_pretrain = cfg["dqn"]["nu_pretrain"]
         self.reward_type = cfg["dqn"]["reward_type"]
         self.count_post_pre_train = 0
-        if self.state_type == 'hidden':
-            self.state_size = cfg["model"]["encoder"]["hidden_size"]*2
+        self.hidden_size = cfg["model"]["encoder"]["hidden_size"]
+        if self.state_type == 'hidden' and cfg["model"]["encoder"]["bidirectional"]:
+            self.state_size = self.hidden_size*2
         else:
-            self.state_size = cfg["model"]["encoder"]["hidden_size"]
+            self.state_size = self.hidden_size
+
         self.actions_size = len(src_vocab)
         self.gamma = None
         # print("Sample size: ", self.sample_size )
@@ -179,7 +181,7 @@ class QManager(object):
         #Following the algorithm
         self.target_net.load_state_dict(self.eval_net.state_dict())
         self.learn_step_counter = 0
-        self.memory_counter = 0
+        #self.memory_counter = 0
         self.size_memory1 = self.state_size * 2 + 2 + 2
         self.memory = np.zeros((self.mem_cap, self.size_memory1 ))
         self.optimizer = torch.optim.Adam(self.eval_net.parameters()
@@ -230,30 +232,12 @@ class QManager(object):
         self.index_mem = 0
         self.logger.info("We are using the reward named: %s", self.reward_type)
         #Reward funtion related:
-
-        if self.reward_type == "bleu_diff" :
-            print("You select the reward based on the Bleu score differences")
-            self.Reward = self.Reward_bleu_diff
-
-        elif self.reward_type == "bleu_lin" :
-            print("You select the reward based on the linear Bleu socres, and several punishments")
-            self.Reward = self.Reward_lin
-
-        elif self.reward_type == "bleu_fin" :
-            print("You select the reward based on the final score on the last state ")
-            self.Reward = self.Reward_bleu_fin
-
-        elif self.reward_type == "bleu_hand" :
-            print("You select the reward based on the improved version of _seq ")
-            self.Reward = self.Reward_hand
-
-        elif self.reward_type == "bleu_batch" :
+        self.logger.info("As states we set the : %s", self.state_type)
+        
+        if self.reward_type == "bleu_batch":
             print("You select the reward based on the bleu_batch ")
             self.Reward = self.Reward_batch
 
-        else:
-            print("You select the reward based on the sequence accuaracy bleu_seq")
-            self.Reward = self.Reward_seq
 
     def Collecting_experiences(self)-> None:
         """
@@ -305,7 +289,7 @@ class QManager(object):
             for _, data_set in self.data_to_train_dqn.items():
                 valid_iter = make_data_iter(
                     dataset=data_set, batch_size=self.batch_size, batch_type=self.batch_type,
-                    shuffle=False, train=False)
+                    shuffle=True, train=True)
                 #valid_sources_raw = data_set.src
                 # disable dropout
                 #self.model.eval()
@@ -315,19 +299,19 @@ class QManager(object):
                     freeze_model(self.model)
                     batch = Batch(valid_batch
                     , self.pad_index, use_cuda=self.use_cuda)
-                    # sort batch now by src length and keep track of order
-                    sort_reverse_index = batch.sort_by_src_lengths()
                     encoder_output, encoder_hidden = self.model.encode(
                         batch.src, batch.src_lengths,
                         batch.src_mask)
-                    # if maximum output length is not globally specified, adapt to src len
 
+                    # if maximum output length is not globally specified, adapt to src len
                     if self.max_output_length is None:
                         self.max_output_length = int(max(batch.src_lengths.cpu().numpy()) * 1.5)
 
                     batch_size = batch.src_mask.size(0)
                     prev_y = batch.src_mask.new_full(size=[batch_size, 1], fill_value=self.bos_index,
                                             dtype=torch.long)
+                    #self.logger.info("self.bos_index: %d", self.bos_index)
+                    
                     output = []
                     hidden = self.model.decoder._init_hidden(encoder_hidden)
                     prev_att_vector = None
@@ -345,7 +329,7 @@ class QManager(object):
                     # pylint: disable=unused-variable
 
                     # * Defining it as zeros:____------------------------------------
-                    prev_att_vector = encoder_output.new_zeros([batch_size, 1, self.state_size])
+                    prev_att_vector = encoder_output.new_zeros([batch_size, 1, self.hidden_size])
                     #----------------------------------------------------------------
                     #We can try 2 options (using a state 0 from attention):
                     # * Generating a previus one:------------------------------------
@@ -371,12 +355,15 @@ class QManager(object):
                     output.append(prev_y.squeeze(1).detach().cpu().numpy())
                     for t in range(self.max_output_length):
                         if self.state_type == 'hidden':
-                            #state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                            state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()   # (batch_size,1,size_state)
+                            #state = hidden[0].squeeze(1).detach().cpu().numpy()
+                            #state = hidden[1].squeeze(1).detach().cpu().numpy()
+                            state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
+                            #print(" state shape: ", state.shape) # (batch_size,size_state)
 
                         else:
-                            #state = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]  # (1,size_state)
-                            state = prev_att_vector.squeeze(1).detach().cpu().numpy()  # (batch_size,1,size_state)
+                            state = prev_att_vector.squeeze(1).detach().cpu().numpy()  # (batch_size,size_state)
+                            #print(" state shape: ", state.shape) # (batch_size,size_state)
+
                         # decode one single step
                         logits, hidden, att_probs, prev_att_vector = self.model.decoder(
                             encoder_output=encoder_output,
@@ -389,12 +376,11 @@ class QManager(object):
                         # logits: batch x time=1 x vocab (logits)
 
                         if self.state_type == 'hidden':
-                            # state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0]
-                            state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy() # (batch_size,1,size_state)
-
+                            state_ = torch.cat(hidden, dim=2).squeeze(1).detach().cpu().numpy()[0] # (batch_size,size_state)
+                            #print(" state_ shape: ", state_.shape) 
                         else:
-                            # state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()[0]
-                            state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()          # (batch_size,1,size_state)
+                            state_ = prev_att_vector.squeeze(1).detach().cpu().numpy()          # (batch_size,size_state)
+                            #print(" state_ shape: ", state_.shape) 
 
                         # Checar que si sea el 3, despues del ultimo
                         next_word = torch.argmax(logits, dim=-1)  # batch x time=1
@@ -404,8 +390,7 @@ class QManager(object):
                         #     a_ = trg_[t]
                         # else:
                         #     a_ = self.eos_index
-                        a_ = 0
-
+                        
                         if not flag_comp:
                             output.append(next_word.squeeze(1).detach().cpu().numpy())
 
@@ -427,14 +412,15 @@ class QManager(object):
                             #if flag_comp:
                             #    tup = (self.memory_counter, state, a, torch.zeros(size=(batch_size, 1)), torch.zeros(size=(batch_size, 1)), finished_aux)
                             #else:
-                            tup = (self.memory_counter, state, a, state_, torch.zeros(size=(batch_size, 1)), finished_aux)
+                            tup = (state, a, state_, torch.zeros(size=(batch_size, 1)), finished_aux)
                             exp_list.append(tup)
-                            self.memory_counter += 1
+                            #self.memory_counter += 1
                         #print(t)
                         # ** A cambiar para  cuando se usan Batches
                         # stop predicting if <eos> reached for all elements in batch
 
                         if flag_comp:
+                            #self.logger("Break with flag complete.")
                             print("break with flag")
                             break
 
@@ -463,16 +449,16 @@ class QManager(object):
                     else:
                         r = self.Reward(batch.trg_input, hyp, show=False)  # 1 , time -1 
 
-                    if batch_i == 0:
-                        self.store_transition(exp_list, r, sort_reverse_index, show =True)
+                    if epoch_no == 0 and batch_i == 0:
+                        self.store_transition(exp_list, r, show =True)
 
                     else:
-                        self.store_transition(exp_list, r, sort_reverse_index)
+                        self.store_transition(exp_list, r)
 
                     batch_i += 1
 
                     #Learning.....
-                    if self.memory_counter > self.mem_cap:
+                    if self.index_mem > self.mem_cap:
                         #if self.dev_network_count < 13:
                         self.learn()
                     # else:
@@ -486,7 +472,7 @@ class QManager(object):
         Select experinces based on the reward. And compute the bellman eqution and the ACC model.
         Algoritm 5. from paper https://arxiv.org/pdf/1805.09461v1.pdf like. Without the actor updating.
         :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
-        :param rew: rewards for every experince. Of lenght of the hypotesis 
+        :param rew: rewards for every experince. Of lenght of the hypotesis
         """
         # target parameter update
                 # target parameter update
@@ -496,7 +482,7 @@ class QManager(object):
             #testing the preformace of the network
 
             if self.learn_step_counter == 0:
-                self.logger.info(' As referece this first test on dev data. Is maded with the Q networks, initialized randomly : ' )
+                self.logger.info(' As referece this first test on dev data. Is maded with the Q networks, initialized randomly : ')
                 print('As referece this first test on dev data. Is maded with the Q networks, initialized randomly : ' )
 
             else:
@@ -510,8 +496,8 @@ class QManager(object):
         long_Batch = self.sample_size*1
 
         # Sampling the higgest rewards values
-        b_memory_big = self.memory[np.argsort(-self.memory[:-self.max_output_length, self.state_size+1])][:long_Batch]
-        print("b_memory_big: ", b_memory_big)
+        b_memory_big = self.memory[np.argsort(-self.memory[:, self.state_size+1])][:long_Batch]
+        # print("b_memory_big: ", b_memory_big)
         sample_index = np.random.choice(long_Batch, self.sample_size)
         b_memory = b_memory_big[sample_index, :]
         b_s = torch.FloatTensor(b_memory[:, :self.state_size])
@@ -519,13 +505,19 @@ class QManager(object):
         b_r = torch.FloatTensor(b_memory[:, self.state_size+1:self.state_size+2])
         b_s_ = torch.FloatTensor(b_memory[:, self.state_size+2: self.state_size+2 + self.state_size])
         b_is_eos = torch.FloatTensor(b_memory[:, -1]).view(self.sample_size, 1)
-        #print(b_a, b_a.size)
-        #print(b_is_eos)
+
+        # print("b_s",b_s.shape, "\n", b_s[:5], )
+        # print("b_s_",b_s_.shape, "\n", b_s_[:5], )
+        # print("b_a: ", b_a, b_a.shape)
+        # print("b_r: ", b_r, b_r.shape)
+        # print("b_is_eos: ", b_is_eos, b_is_eos.shape)
+        
         #Activate the eval_net
         unfreeze_model(self.eval_net)
        # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
+
         # taking the most likely action.
         # use the hyperparameter nu_pretrain to take the true action
         # or the one take from the one computed from the q_target
@@ -551,7 +543,7 @@ class QManager(object):
 
         #version 0
         #q_target = b_r + self.gamma * q_next.max(1)[0].view(self.sample_size, 1)   # shape (batch, 1)
-
+        print("q_eval, q_target: ", q_eval, q_target) 
         loss = self.loss_func(q_eval, q_target)
         self.tb_writer.add_scalar("learn/learn_batch_loss",
                                               loss.data, self.learn_step_counter)
@@ -562,7 +554,7 @@ class QManager(object):
         #desctivate the eval_net
         freeze_model(self.eval_net)
 
-    def store_transition(self, exp_list, rew, sort_reverse_index, show = False):
+    def store_transition(self, exp_list, rew, show = False):
         """
         Fill/ or refill the memory with experiences.
         :param exp_list: List of experineces. Tuples (memory_counter, state, a, state_, is_eos[0,0])
@@ -580,13 +572,8 @@ class QManager(object):
         #self.index_t = 0
 
         for i, ele in enumerate(exp_list):
-            index, state, a, state_, a_, finished  = ele
-            #r = rew[sort_reverse_index,i]   # (size_batch, t)
+            state, a, state_, a_, finished  = ele
             r = rew[:,i]   # (size_batch, t)
-            #state = state[sort_reverse_index]
-            #state_ = state_[sort_reverse_index]
-            #a = a[sort_reverse_index]
-            #finished = finished[sort_reverse_index]
             # print ("a = ",a)
             # print ("reward = ", r)
             # print ("finished =  ", finished)
@@ -601,7 +588,7 @@ class QManager(object):
                 r_idx = r[idx_batch].numpy()
                 state_idx_ = state_[idx_batch]
                 a_idx_ = a_[idx_batch].numpy()
-
+            
                 if finished[idx_batch] < 2:
                     transition = np.hstack((state_idx, [a_idx, r_idx], state_idx_, a_idx_, 1))
 
@@ -610,7 +597,7 @@ class QManager(object):
 
                 if finished[idx_batch] <= 2:
                     print("Debugg idx_batch = ", idx_batch)
-                    print(index, a_idx, r_idx ,a_idx_, finished[idx_batch], "\n")
+                    print( a_idx, r_idx ,a_idx_, finished[idx_batch], "\n")
                     index = self.index_mem  % self.mem_cap
                     self.memory[index, :] = transition
                     self.index_mem += 1
@@ -722,7 +709,7 @@ class QManager(object):
 
                     # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
                     if self.state_type == 'hidden':
-                        state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu()
+                        state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu()[0]
 
                     else:
                         state = torch.FloatTensor(prev_att_vector.squeeze(1).detach().cpu().numpy())
