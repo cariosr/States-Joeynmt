@@ -9,7 +9,7 @@ data:
     test: "test/data/mini_reverse/test"
     level: "word"
     lowercase: False
-    max_sent_length: 25
+    max_sent_length: 12
     src_voc_min_freq: 0
     src_voc_limit: 100
     trg_voc_min_freq: 0
@@ -28,7 +28,7 @@ training:
     learning_rate_min: 0.0002
     weight_decay: 0.0
     clip_grad_norm: 1.0
-    batch_size: 10
+    batch_size: 32
     batch_type: "sentence"
     scheduling: "plateau"
     patience: 5
@@ -42,7 +42,7 @@ training:
     overwrite: True
     shuffle: True
     use_cuda: False
-    max_output_length: 10
+    max_output_length: 12
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
 
@@ -58,7 +58,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 24
+        hidden_size: 36
         bidirectional: True
         dropout: 0.1
         num_layers: 1
@@ -67,7 +67,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 24
+        hidden_size: 36
         dropout: 0.1
         hidden_dropout: 0.1
         num_layers: 1
@@ -75,7 +75,7 @@ model:
         init_hidden: "bridge"
         attention: "luong"
 dqn:
-    epochs: 500
+    epochs: 2000
     sample_size: 256
     lr: 0.00005
     egreed_max: 0.9
@@ -89,4 +89,4 @@ dqn:
     state_type: 'hidden'
     reward_type: 'bleu_batch'
     nu_pretrain: 0
-    other_descrip: '_100_LSTM_'
+    other_descrip: '_batch_test_'

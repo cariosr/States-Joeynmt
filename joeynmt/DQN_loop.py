@@ -17,6 +17,8 @@ import sacrebleu
 import time
 import datetime
 
+from scipy.stats import entropy
+
 
 def freeze_model(model):
     model.eval()
@@ -254,7 +256,7 @@ class QManager(object):
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
             # keep the beam_dqn = 1, otherwise is harmfull to the learning
             beam_dqn = 1
-            self.gamma = 0.84
+            self.gamma = 0.99
             if self.learn_step_counter < self.nu_pretrain:
                 # print("On the pretrain of the Q target network. The beam_dqn =1.")
                 beam_dqn = 1
@@ -541,12 +543,37 @@ class QManager(object):
         #If eos q_target = reward. 
         q_target = b_r + self.gamma * b_is_eos* q_eval_next.view(self.sample_size, 1)   # shape (batch, 1)
 
-        #version 0
-        #q_target = b_r + self.gamma * q_next.max(1)[0].view(self.sample_size, 1)   # shape (batch, 1)
-        print("q_eval, q_target: ", q_eval, q_target) 
+ 
+
+        soft_func = torch.nn.Softmax(dim = -1)
+        #print(soft_func(a))
+        
+        q_eval_all = self.eval_net(b_s).detach()
+
+        q_eval_max = torch.LongTensor(q_eval_all.max(1)[1].view(self.sample_size, 1).long())
+
+        print ("q_eval_all: ")
+        print (q_eval_all[:10])
+        print ("q_eval_max: ")
+        print (q_eval_max[:10])
+        print ("b_a:")
+        print (b_a[:10]) 
+
+        entro = entropy(soft_func(q_eval_all).T, base=self.actions_size)
+        #print("entropy: ", entro)
+        aver_entro = entro.sum()/self.sample_size
+        self.tb_writer.add_scalar("learn/q_eval_entropy",
+                        aver_entro, self.learn_step_counter)
+
+
         loss = self.loss_func(q_eval, q_target)
+        
         self.tb_writer.add_scalar("learn/learn_batch_loss",
                                               loss.data, self.learn_step_counter)
+
+        if loss < (1.5 * (10 ** (-4))):
+            self.stop_reason = "Stopped because loss shrinking too slowly"
+            self.stop = True
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -585,7 +612,7 @@ class QManager(object):
                 #print(' ... s[:3]: ', state[:3], ' ... s_[:5]: ', state_[:3], )
                 state_idx = state[idx_batch]
                 a_idx = a[idx_batch]
-                r_idx = r[idx_batch].numpy()
+                r_idx = r[idx_batch]#.numpy()
                 state_idx_ = state_[idx_batch]
                 a_idx_ = a_[idx_batch].numpy()
             
@@ -593,48 +620,72 @@ class QManager(object):
                     transition = np.hstack((state_idx, [a_idx, r_idx], state_idx_, a_idx_, 1))
 
                 elif finished[idx_batch] == 2:
-                    transition = np.hstack((state_idx, [a_idx, r_idx], state_idx_, a_idx_, 0))
+                    state_idx_ = np.zeros([self.state_size])
+                    transition = np.hstack((state_idx, [a_idx, r_idx], state_idx_, a_idx_, 1))
 
                 if finished[idx_batch] <= 2:
-                    print("Debugg idx_batch = ", idx_batch)
-                    print( a_idx, r_idx ,a_idx_, finished[idx_batch], "\n")
+                    # print("Debugg idx_batch = ", idx_batch)
+                    # print( a_idx, r_idx ,a_idx_, finished[idx_batch], "\n")
                     index = self.index_mem  % self.mem_cap
                     self.memory[index, :] = transition
                     self.index_mem += 1
 
     def Reward_batch(self, trg, hyp, show = False):
        #is_eos_index = False
-        for i in range (len(hyp)):
-            first_eos = np.where (hyp[i] == self.eos_index)
 
-            if len(first_eos[0]) > 0:
-                first_eos = first_eos[0][0]
-                idx = np.arange (first_eos, len(hyp[0]))
-                hyp[i][idx] = self.eos_index
-                #is_eos_index = True
+        batch_size_aux = len(hyp)
+        extra_col = self.eos_index * torch.ones(batch_size_aux, dtype=int).view(batch_size_aux, -1)
+        trg = torch.cat([trg, extra_col], dim=1)
+        # for i in range (len(hyp)):
+        #     first_eos = np.where (hyp[i] == self.eos_index)
 
-        decoded_valid_hyp = self.model.trg_vocab.arrays_to_sentences(arrays=hyp,
-                                                    cut_at_eos=True)
-        decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg,
-                                                    cut_at_eos=True)
+        #     if len(first_eos[0]) > 0:
+        #         first_eos = first_eos[0][0]
+        #         idx = np.arange (first_eos, len(hyp[0]))
+        #         hyp[i][idx] = self.eos_index
+        #         #is_eos_index = True
 
-        # evaluate with metric on each src, tar, and hypotesis
-        join_char = " " if self.level in ["word", "bpe"] else ""
-        valid_references = [join_char.join(t) for t in decoded_valid_tar]
-        valid_hypotheses = [join_char.join(t) for t in decoded_valid_hyp]
+        rew_distributed = np.zeros([batch_size_aux, len(hyp[0]) -1 ])
 
-        # post-process
-        if self.level == "bpe":
-            valid_references = [bpe_postprocess(v)
-                                for v in valid_references]
-            valid_hypotheses = [bpe_postprocess(v) for
-                                v in valid_hypotheses]
+        # print("hyp",type(hyp),"\n", hyp)
+        # print("trg",type(trg),"\n", trg)
 
-        # if references are given, evaluate against them
-        assert len(valid_hypotheses) == len(valid_references)
+        for i in np.arange(batch_size_aux):
+            
+            hyp_i = hyp[i]
+            trg_i = np.asarray(trg[i])
+            # trg_i = trg[i]
+            
+            # print("hyp_i: ", type(hyp_i), hyp_i.shape, '\n', hyp_i.reshape([1,-1]))
+            # print("trg_i: ", type(trg_i), trg_i.shape, '\n', trg_i.reshape([1,-1]))
 
-        blue_batch_score = bleu(valid_hypotheses, valid_references)
-        rew_distributed = distribute_reward(trg, hyp, blue_batch_score, self.eos_index)
+            
+            decoded_valid_hyp = self.model.trg_vocab.arrays_to_sentences(arrays=hyp_i.reshape([1,-1]),
+                                                        cut_at_eos=True)
+            decoded_valid_tar = self.model.trg_vocab.arrays_to_sentences(arrays=trg_i.reshape([1,-1]),
+                                                        cut_at_eos=True)
+
+            # evaluate with metric on each src, tar, and hypotesis
+            join_char = " " if self.level in ["word", "bpe"] else ""
+            valid_references = [join_char.join(t) for t in decoded_valid_tar]
+            valid_hypotheses = [join_char.join(t) for t in decoded_valid_hyp]
+
+            # post-process
+            if self.level == "bpe":
+                valid_references = [bpe_postprocess(v)
+                                    for v in valid_references]
+                valid_hypotheses = [bpe_postprocess(v) for
+                                    v in valid_hypotheses]
+
+            # if references are given, evaluate against them
+            assert len(valid_hypotheses) == len(valid_references)
+
+            blue_batch_score = bleu(valid_hypotheses, valid_references)
+            
+            rew_distributed[i, -1] =  blue_batch_score
+            # rew_distributed = distribute_reward(trg, hyp, blue_batch_score, self.eos_index)
+
+
 
         if show:
             print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
@@ -668,6 +719,8 @@ class QManager(object):
             all_outputs = []
             all_outputs_to_bleu = []
             batch_i = 0
+
+            aver_entro_list = []
 
             for valid_batch in iter(valid_iter):
                 # run as during training to get validation loss (e.g. xent)
@@ -719,6 +772,14 @@ class QManager(object):
 
                     logits = self.eval_net(state)
                     batch_size_aux =  len(logits)
+
+
+                    soft_func = torch.nn.Softmax(dim = -1)
+
+                    entro = entropy(soft_func(logits).T, base=self.actions_size)
+                    aver_entro = entro.sum()/batch_size_aux
+                    aver_entro_list.append(aver_entro)
+
                     logits = logits.reshape([batch_size_aux, 1, -1])
                     #print(type(logits), logits.shape, logits)
                     next_word = torch.argmax(logits, dim=-1)                        
@@ -752,20 +813,23 @@ class QManager(object):
                 else:
                     r = self.Reward(batch.trg_input, hyp , show = False)
 
-                r_total += torch.sum(r)
+                r_total += np.sum(r)
 
                 if self.dev_network_count == 0:
                     extra_col = self.eos_index *torch.ones(len(batch.trg_input) , dtype=int).view(len(batch.trg_input),-1) 
                     trg_extra_col = torch.cat([batch.trg_input,extra_col ], dim= 1)
                     roptimal = self.Reward(batch.trg_input, trg_extra_col , show = False)
                     #print('roptimal: ', roptimal)
-                    roptimal_total += torch.sum(roptimal)
+                    roptimal_total += np.sum(roptimal)
                     #print('roptimal_total: ', roptimal_total)
 
                 all_outputs.extend(stacked_output)
                 all_outputs_to_bleu.extend(stacked_output_to_bleu)
 
                 batch_i += 1
+
+            aver_entro = sum(aver_entro_list)/len(aver_entro_list)
+
 
             if self.dev_network_count == 0:
                 self.logger.info("Optimal reward is: %.2f", roptimal_total)
@@ -833,6 +897,9 @@ class QManager(object):
                                             current_valid_score, self.dev_network_count)
             self.tb_writer.add_scalar("dev/regret",
                                             self.r_optimal_total - r_total, self.dev_network_count)
+            self.tb_writer.add_scalar("dev/Entropy",
+                                            aver_entro, self.dev_network_count)
+
 
             print(self.dev_network_count ,' r_total and score: ', r_total , current_valid_score)
             
