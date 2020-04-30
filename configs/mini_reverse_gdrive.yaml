@@ -41,7 +41,7 @@ training:
     model_dir: "/content/gdrive/My Drive/models/batch_V0"
     overwrite: True
     shuffle: True
-    use_cuda: True
+    use_cuda: False
     max_output_length: 10
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
