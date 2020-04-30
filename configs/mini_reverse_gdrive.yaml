@@ -1,4 +1,4 @@
-name: "reverse_experiment"
+name: "mini_reverse_batch_experiment"
 
 data:
     src: "src"
