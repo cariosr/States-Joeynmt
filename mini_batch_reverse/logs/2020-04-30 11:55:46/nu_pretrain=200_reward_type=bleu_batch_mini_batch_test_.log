@@ -1,0 +1,186 @@
+2020-04-30 11:55:46,947 Hello! This is Joey-NMT.
+2020-04-30 11:55:46,947 cfg.name                           : mini_batch_reverse
+2020-04-30 11:55:46,948 cfg.data.src                       : src
+2020-04-30 11:55:46,948 cfg.data.trg                       : trg
+2020-04-30 11:55:46,949 cfg.data.train                     : test/data/mini_batch_reverse/train
+2020-04-30 11:55:46,949 cfg.data.dev                       : test/data/mini_batch_reverse/dev
+2020-04-30 11:55:46,950 cfg.data.test                      : test/data/mini_batch_reverse/test
+2020-04-30 11:55:46,950 cfg.data.level                     : word
+2020-04-30 11:55:46,950 cfg.data.lowercase                 : False
+2020-04-30 11:55:46,951 cfg.data.max_sent_length           : 25
+2020-04-30 11:55:46,951 cfg.data.src_voc_min_freq          : 0
+2020-04-30 11:55:46,951 cfg.data.src_voc_limit             : 100
+2020-04-30 11:55:46,952 cfg.data.trg_voc_min_freq          : 0
+2020-04-30 11:55:46,952 cfg.data.trg_voc_limit             : 100
+2020-04-30 11:55:46,953 cfg.testing.beam_size              : 1
+2020-04-30 11:55:46,953 cfg.testing.alpha                  : 1.0
+2020-04-30 11:55:46,953 cfg.training.random_seed           : 42
+2020-04-30 11:55:46,954 cfg.training.optimizer             : adam
+2020-04-30 11:55:46,954 cfg.training.learning_rate         : 0.001
+2020-04-30 11:55:46,955 cfg.training.learning_rate_min     : 0.0002
+2020-04-30 11:55:46,956 cfg.training.weight_decay          : 0.0
+2020-04-30 11:55:46,956 cfg.training.clip_grad_norm        : 1.0
+2020-04-30 11:55:46,956 cfg.training.batch_size            : 5
+2020-04-30 11:55:46,957 cfg.training.batch_type            : sentence
+2020-04-30 11:55:46,957 cfg.training.scheduling            : plateau
+2020-04-30 11:55:46,957 cfg.training.patience              : 5
+2020-04-30 11:55:46,958 cfg.training.decrease_factor       : 0.5
+2020-04-30 11:55:46,958 cfg.training.early_stopping_metric : eval_metric
+2020-04-30 11:55:46,959 cfg.training.epochs                : 100
+2020-04-30 11:55:46,959 cfg.training.validation_freq       : 10
+2020-04-30 11:55:46,960 cfg.training.logging_freq          : 10
+2020-04-30 11:55:46,961 cfg.training.eval_metric           : bleu
+2020-04-30 11:55:46,962 cfg.training.model_dir             : mini_batch_reverse
+2020-04-30 11:55:46,962 cfg.training.overwrite             : True
+2020-04-30 11:55:46,963 cfg.training.shuffle               : True
+2020-04-30 11:55:46,963 cfg.training.use_cuda              : False
+2020-04-30 11:55:46,963 cfg.training.max_output_length     : 10
+2020-04-30 11:55:46,964 cfg.training.print_valid_sents     : [0, 3, 6]
+2020-04-30 11:55:46,968 cfg.training.keep_last_ckpts       : 2
+2020-04-30 11:55:46,969 cfg.model.initializer              : xavier
+2020-04-30 11:55:46,969 cfg.model.embed_initializer        : normal
+2020-04-30 11:55:46,970 cfg.model.embed_init_weight        : 0.1
+2020-04-30 11:55:46,970 cfg.model.bias_initializer         : zeros
+2020-04-30 11:55:46,971 cfg.model.init_rnn_orthogonal      : False
+2020-04-30 11:55:46,971 cfg.model.lstm_forget_gate         : 0.0
+2020-04-30 11:55:46,972 cfg.model.encoder.rnn_type         : lstm
+2020-04-30 11:55:46,973 cfg.model.encoder.embeddings.embedding_dim : 16
+2020-04-30 11:55:46,973 cfg.model.encoder.embeddings.scale : False
+2020-04-30 11:55:46,974 cfg.model.encoder.hidden_size      : 24
+2020-04-30 11:55:46,974 cfg.model.encoder.bidirectional    : True
+2020-04-30 11:55:46,975 cfg.model.encoder.dropout          : 0.1
+2020-04-30 11:55:46,975 cfg.model.encoder.num_layers       : 1
+2020-04-30 11:55:46,976 cfg.model.decoder.rnn_type         : lstm
+2020-04-30 11:55:46,976 cfg.model.decoder.embeddings.embedding_dim : 16
+2020-04-30 11:55:46,977 cfg.model.decoder.embeddings.scale : False
+2020-04-30 11:55:46,977 cfg.model.decoder.hidden_size      : 24
+2020-04-30 11:55:46,977 cfg.model.decoder.dropout          : 0.1
+2020-04-30 11:55:46,978 cfg.model.decoder.hidden_dropout   : 0.1
+2020-04-30 11:55:46,978 cfg.model.decoder.num_layers       : 1
+2020-04-30 11:55:46,979 cfg.model.decoder.input_feeding    : True
+2020-04-30 11:55:46,979 cfg.model.decoder.init_hidden      : bridge
+2020-04-30 11:55:46,979 cfg.model.decoder.attention        : luong
+2020-04-30 11:55:46,980 cfg.dqn.epochs                     : 2000
+2020-04-30 11:55:46,984 cfg.dqn.sample_size                : 64
+2020-04-30 11:55:46,984 cfg.dqn.lr                         : 0.0001
+2020-04-30 11:55:46,985 cfg.dqn.egreed_max                 : 0.9
+2020-04-30 11:55:46,985 cfg.dqn.egreed_min                 : 0.001
+2020-04-30 11:55:46,986 cfg.dqn.gamma_max                  : 0.9
+2020-04-30 11:55:46,986 cfg.dqn.gamma_min                  : 0.3
+2020-04-30 11:55:46,986 cfg.dqn.nu_iter                    : 10
+2020-04-30 11:55:46,987 cfg.dqn.mem_cap                    : 200
+2020-04-30 11:55:46,987 cfg.dqn.beam_min                   : 1
+2020-04-30 11:55:46,988 cfg.dqn.beam_max                   : 50
+2020-04-30 11:55:46,989 cfg.dqn.state_type                 : hidden
+2020-04-30 11:55:46,990 cfg.dqn.reward_type                : bleu_batch
+2020-04-30 11:55:46,990 cfg.dqn.nu_pretrain                : 200
+2020-04-30 11:55:46,990 cfg.dqn.other_descrip              : _mini_batch_test_
+2020-04-30 11:55:46,991 We are using the reward named: bleu_batch
+2020-04-30 11:55:46,992 As states we set the : hidden
+2020-04-30 11:55:46,993 EPOCH 1
+2020-04-30 11:55:46,998  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:47,307 EPOCH 2
+2020-04-30 11:55:47,308  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:47,393  As referece this first test on dev data. Is maded with the Q networks, initialized randomly : 
+2020-04-30 11:55:47,515 Currently on the prediction.
+2020-04-30 11:55:47,653 Optimal reward is: 2000.00
+2020-04-30 11:55:47,654 On train
+2020-04-30 11:55:47,654 valid_references 	 vs 	 predicted_hypotheses
+2020-04-30 11:55:47,654  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,654  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,654  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,654  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,654  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,655  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,655  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,655  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,655  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,655  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:47,658 r_total: 0.00 
+2020-04-30 11:55:47,659 bleu score: 0.00
+2020-04-30 11:55:47,750 EPOCH 3
+2020-04-30 11:55:47,750  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:47,934 EPOCH 4
+2020-04-30 11:55:47,934  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:48,140 EPOCH 5
+2020-04-30 11:55:48,141  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:48,271  Copying the Q-Val on Q-tar on step: 1 
+2020-04-30 11:55:48,396 Currently on the prediction.
+2020-04-30 11:55:48,518 On train
+2020-04-30 11:55:48,518 valid_references 	 vs 	 predicted_hypotheses
+2020-04-30 11:55:48,518  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,518  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,519  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:48,524 r_total: 0.00 
+2020-04-30 11:55:48,524 bleu score: 0.00
+2020-04-30 11:55:48,694 EPOCH 6
+2020-04-30 11:55:48,695  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:48,903 EPOCH 7
+2020-04-30 11:55:48,909  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:49,139  Copying the Q-Val on Q-tar on step: 2 
+2020-04-30 11:55:49,254 Currently on the prediction.
+2020-04-30 11:55:49,380 On train
+2020-04-30 11:55:49,381 valid_references 	 vs 	 predicted_hypotheses
+2020-04-30 11:55:49,382  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,382  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,383  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,383  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,384  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,385  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,385  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,386  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,386  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,386  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:49,399 r_total: 0.00 
+2020-04-30 11:55:49,400 bleu score: 0.00
+2020-04-30 11:55:49,556 EPOCH 8
+2020-04-30 11:55:49,557  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:49,986 EPOCH 9
+2020-04-30 11:55:49,987  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:50,357 EPOCH 10
+2020-04-30 11:55:50,358  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:50,448  Copying the Q-Val on Q-tar on step: 3 
+2020-04-30 11:55:50,598 Currently on the prediction.
+2020-04-30 11:55:50,743 On train
+2020-04-30 11:55:50,744 valid_references 	 vs 	 predicted_hypotheses
+2020-04-30 11:55:50,744  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,744  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,744  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,744  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,744  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,744  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,745  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,745  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,745  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,745  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:50,749 r_total: 0.00 
+2020-04-30 11:55:50,749 bleu score: 0.00
+2020-04-30 11:55:50,937 EPOCH 11
+2020-04-30 11:55:50,937  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:51,094 EPOCH 12
+2020-04-30 11:55:51,094  beam_dqn : 1, egreed: 0.90, gamma:  0.60
+2020-04-30 11:55:51,289  Copying the Q-Val on Q-tar on step: 4 
+2020-04-30 11:55:51,417 Currently on the prediction.
+2020-04-30 11:55:51,570 On train
+2020-04-30 11:55:51,570 valid_references 	 vs 	 predicted_hypotheses
+2020-04-30 11:55:51,570  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,570  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,570  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,570  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,570  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,571  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,571  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,571  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,571  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,571  5 4 3 2 1	 vs <s> <s> <s> <s> 2 2 2 2 2 2	
+2020-04-30 11:55:51,575 r_total: 0.00 
+2020-04-30 11:55:51,576 bleu score: 0.00
+2020-04-30 11:55:51,684 EPOCH 13
+2020-04-30 11:55:51,684  beam_dqn : 1, egreed: 0.90, gamma:  0.60

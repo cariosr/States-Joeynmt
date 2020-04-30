@@ -76,25 +76,42 @@ def distribute_reward(trg, hyp, blue_batch_score, eos_index):
     return final_rew
 
 
+def funcMapSta_Ac(N_layers, state_size, actions_size):
+    
+    n_layers = np.arange(1,N_layers+1)
+    
+    ns = ((state_size-actions_size)/(1-N_layers)) * (n_layers -1) + state_size
+    
+    return ns.astype(int)
 
 class Net(nn.Module):
 
-    def __init__(self, N_STATES, N_ACTIONS):
+    def __init__(self, N_STATES, N_ACTIONS, N_LAYERS):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(N_STATES, int(N_STATES/2))
-        self.fc1.weight.data.normal_(0, 0.1)   # initialization
-        self.fc2 = nn.Linear(int(N_STATES/2), int(N_STATES/2))
-        self.fc2.weight.data.normal_(0, 0.1)   # initialization
-        self.out = nn.Linear(int(N_STATES/2), N_ACTIONS)
+        
+        net_size = funcMapSta_Ac(N_LAYERS, N_STATES, N_ACTIONS)
+        
+        print("The Net values are:")
+        self.hidden = []
+        for k in range(len(net_size)-2):
+            self.hidden.append(nn.Linear(net_size[k], net_size[k+1]))
+            self.hidden[k].weight.data.normal_(0, 0.1)   # initialization
+            print(net_size[k], net_size[k+1])
+
+        # Output layer
+        self.out = nn.Linear(net_size[-2], net_size[-1])
         self.out.weight.data.normal_(0, 0.1)   # initialization
+        print(net_size[-2], net_size[-1])
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.fc2(x)
-        x = F.relu(x)
+        
+        # Feedforward
+        for layer in self.hidden:
+            x = F.relu(layer(x))
         actions_value = self.out(x)
+
         return actions_value
+
 
 random.seed(10)
 
@@ -171,6 +188,8 @@ class QManager(object):
         else:
             self.state_size = self.hidden_size
 
+        self.N_layers = cfg["dqn"]["N_layers"]
+
         self.actions_size = len(src_vocab)
         self.gamma = None
         # print("Sample size: ", self.sample_size )
@@ -178,8 +197,8 @@ class QManager(object):
         # print("Action size: ", self.actions_size)
         self.epochs = cfg["dqn"]["epochs"]
         # Inii the Qnet and Qnet2
-        self.eval_net = Net(self.state_size, self.actions_size)
-        self.target_net = Net(self.state_size, self.actions_size)
+        self.eval_net = Net(self.state_size, self.actions_size, self.N_layers)
+        self.target_net = Net(self.state_size, self.actions_size, self.N_layers)
         #Following the algorithm
         self.target_net.load_state_dict(self.eval_net.state_dict())
         self.learn_step_counter = 0
@@ -388,6 +407,8 @@ class QManager(object):
                         next_word = torch.argmax(logits, dim=-1)  # batch x time=1
                         # a = prev_y.squeeze(1).detach().cpu().numpy()[0]
                         a = prev_y.squeeze(1).detach().cpu().numpy()        # (batch_size ,1)
+                        
+                        a_ = next_word.squeeze(1).detach().cpu().numpy()        # (batch_size ,1)
                         # if t < trg_.size:
                         #     a_ = trg_[t]
                         # else:
@@ -414,20 +435,29 @@ class QManager(object):
                             #if flag_comp:
                             #    tup = (self.memory_counter, state, a, torch.zeros(size=(batch_size, 1)), torch.zeros(size=(batch_size, 1)), finished_aux)
                             #else:
-                            tup = (state, a, state_, torch.zeros(size=(batch_size, 1)), finished_aux)
+                            tup = (state, a, state_, a_, finished_aux)
                             exp_list.append(tup)
                             #self.memory_counter += 1
                         #print(t)
                         # ** A cambiar para  cuando se usan Batches
                         # stop predicting if <eos> reached for all elements in batch
 
-                        if flag_comp:
-                            #self.logger("Break with flag complete.")
-                            print("break with flag")
-                            break
+                        # if flag_comp:
+                        #     #self.logger("Break with flag complete.")
+                        #     print("break with flag")
+                        #     break
 
                         if (finished >= 1).sum() == batch_size:
-                            flag_comp = True
+                            # flag_comp = True
+                            finished_aux = finished.clone() + 1
+                            #if flag_comp:
+                            #    tup = (self.memory_counter, state, a, torch.zeros(size=(batch_size, 1)), torch.zeros(size=(batch_size, 1)), finished_aux)
+                            #else:
+                            tup = (state_, self.eos_index*torch.ones(batch_size, 1 ) , torch.zeros(size=(batch_size, self.state_size )),
+                                   self.pad_index * torch.ones(size=(batch_size, 1)), finished_aux)
+                            exp_list.append(tup)
+                            
+                            break
 
                         if t == self.max_output_length-1:
                             print("reach the max output")
@@ -495,7 +525,7 @@ class QManager(object):
             print("Current Bleu score is: ", current_bleu)
 
         self.learn_step_counter += 1
-        long_Batch = self.sample_size*1
+        long_Batch = self.sample_size*10
 
         # Sampling the higgest rewards values
         b_memory_big = self.memory[np.argsort(-self.memory[:, self.state_size+1])][:long_Batch]
@@ -531,6 +561,8 @@ class QManager(object):
         if self.learn_step_counter < self.nu_pretrain:
             if self.learn_step_counter == 1:
                 print ("Using pretraining...")
+            b_is_eos = ~torch.eq(b_a, self.eos_index)
+            
             b_a_ = torch.LongTensor(b_memory[:, self.state_size+2 + self.state_size]).view(self.sample_size, 1)
 
         else:
@@ -602,6 +634,7 @@ class QManager(object):
             state, a, state_, a_, finished  = ele
             r = rew[:,i]   # (size_batch, t)
             # print ("a = ",a)
+            # print ("a_ = ",a_)
             # print ("reward = ", r)
             # print ("finished =  ", finished)
 
@@ -614,21 +647,19 @@ class QManager(object):
                 a_idx = a[idx_batch]
                 r_idx = r[idx_batch]#.numpy()
                 state_idx_ = state_[idx_batch]
-                a_idx_ = a_[idx_batch].numpy()
+                a_idx_ = a_[idx_batch]
             
                 if finished[idx_batch] < 2:
                     transition = np.hstack((state_idx, [a_idx, r_idx], state_idx_, a_idx_, 1))
-
-                elif finished[idx_batch] == 2:
-                    state_idx_ = np.zeros([self.state_size])
+                else:
                     transition = np.hstack((state_idx, [a_idx, r_idx], state_idx_, a_idx_, 1))
-
-                if finished[idx_batch] <= 2:
-                    # print("Debugg idx_batch = ", idx_batch)
-                    # print( a_idx, r_idx ,a_idx_, finished[idx_batch], "\n")
-                    index = self.index_mem  % self.mem_cap
-                    self.memory[index, :] = transition
-                    self.index_mem += 1
+                
+                # if finished[idx_batch] <= 2:
+                #     # print("Debugg idx_batch = ", idx_batch)
+                #     # print( a_idx, r_idx ,a_idx_, finished[idx_batch], "\n")
+                index = self.index_mem  % self.mem_cap
+                self.memory[index, :] = transition
+                self.index_mem += 1
 
     def Reward_batch(self, trg, hyp, show = False):
        #is_eos_index = False
@@ -776,7 +807,7 @@ class QManager(object):
 
                     soft_func = torch.nn.Softmax(dim = -1)
 
-                    entro = entropy(soft_func(logits).T, base=self.actions_size)
+                    entro = entropy(soft_func(logits.detach()).T, base=self.actions_size)
                     aver_entro = entro.sum()/batch_size_aux
                     aver_entro_list.append(aver_entro)
 

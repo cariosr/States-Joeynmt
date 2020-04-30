@@ -42,7 +42,7 @@ training:
     overwrite: True
     shuffle: True
     use_cuda: False
-    max_output_length: 10
+    max_output_length: 12
     print_valid_sents: [0, 3, 6]
     keep_last_ckpts: 2
 
@@ -83,10 +83,10 @@ dqn:
     gamma_max: 0.9
     gamma_min: 0.3
     nu_iter: 10
-    mem_cap: 200
+    mem_cap: 2000
     beam_min: 1
     beam_max: 50
     state_type: 'hidden'
     reward_type: 'bleu_batch'
-    nu_pretrain: 0
+    nu_pretrain: 100
     other_descrip: '_mini_batch_test_'
