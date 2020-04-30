@@ -5,7 +5,8 @@ import os
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from joeynmt.helpers import bpe_postprocess, load_config, make_logger, get_latest_checkpoint, load_checkpoint, set_seed, log_cfg
+from joeynmt.helpers import bpe_postprocess, load_config, make_logger, get_latest_checkpoint, \
+    load_checkpoint, set_seed, log_cfg, symlink_update
 from joeynmt.data import load_data, make_data_iter
 from joeynmt.model import build_model
 from joeynmt.constants import PAD_TOKEN, EOS_TOKEN, BOS_TOKEN
@@ -19,6 +20,7 @@ import datetime
 
 from scipy.stats import entropy
 
+import queue
 
 def freeze_model(model):
     model.eval()
@@ -223,8 +225,21 @@ class QManager(object):
         # build model and load parameters into it
         self.model = build_model(cfg["model"], src_vocab=src_vocab, trg_vocab=trg_vocab)
         self.model.load_state_dict(model_checkpoint["model_state"])
+        
+
+        self.best_ckpt_score = -np.inf
+        # comparison function for scores
+        self.is_best = lambda score: score > self.best_ckpt_score
+        self.ckpt_queue = queue.Queue(maxsize=2)
+        
+
         if self.use_cuda:
             self.model.cuda()
+            self.eval_net.cuda()
+            self.target_net.cuda()
+            self.loss_func.cuda()
+
+
 
         # whether to use beam search for decoding, 0: greedy decoding
         beam_size = 1
@@ -524,6 +539,13 @@ class QManager(object):
             current_bleu = self.dev_network()
             print("Current Bleu score is: ", current_bleu)
 
+            if self.is_best(current_bleu):
+                self.best_ckpt_score = current_bleu
+                self.logger.info(
+                    'Hooray! New best validation result [%f]!', current_bleu)
+                print('Hooray! New best validation result :', current_bleu)
+                self._save_checkpoint()
+
         self.learn_step_counter += 1
         long_Batch = self.sample_size*10
 
@@ -712,11 +734,10 @@ class QManager(object):
             assert len(valid_hypotheses) == len(valid_references)
 
             blue_batch_score = bleu(valid_hypotheses, valid_references)
-            
             rew_distributed[i, -1] =  blue_batch_score
+
+
             # rew_distributed = distribute_reward(trg, hyp, blue_batch_score, self.eos_index)
-
-
 
         if show:
             print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
@@ -728,6 +749,59 @@ class QManager(object):
             print("Rew vector reward: ", rew_distributed)
 
         return rew_distributed
+
+
+    def Reward_seq(self, trg, hyp, show = False):
+        
+        print("trg, hyp")
+        print(trg.shape, hyp.shape)
+        
+        trg_a = np.asarray(trg[0])
+        trg_b = np.zeros([len(trg_a)+1], dtype = int)
+        trg_b[:len(trg_a)] = trg_a
+        trg_b[-1] = 3
+
+        if len(trg_b) != len(hyp[0]):
+            trg_c = np.ones([len(hyp[0])], dtype = int)*(self.actions_size+1)
+            if len(trg_b) > len(hyp[0]):
+                lon = len(hyp[0])
+            else:
+                lon = len(trg_b)
+            trg_c[:lon] = trg_b[:lon] 
+            #print(trg_c[:] == hyp[0,:])
+            trg_b = trg_c
+
+        bolles = trg_b[:] == hyp[0,:]
+
+        bolles = bolles*np.ones(len(trg_b)) + np.zeros(len(trg_b))
+        
+        # Punisment to longer or shorter hyp than trg
+        def fac_long_punish(x, len_tran):
+            return -np.abs(-(x/len_tran) +1)
+
+        #*4*original* Punish increas as the len increase. The best so far!
+        #To fit on the diff computation idea.
+        final_rew = bolles*np.arange(1,len(trg_b)+1)
+        final_rew = np.diff(final_rew) -np.arange(len(hyp[0])-1)*0.2
+
+        #To punish the wrong desitions, but the last one (to avoid the large hyp)
+        for i in np.arange(1,len(final_rew)-1):
+            final_rew[i] = (final_rew[i]+final_rew[i-1])/2.0
+
+        # #*4_1* Include the original ** Best so far (12/04/20). Better regret.
+        # # Penalizing the second token when goes worng:
+        if len(hyp[0]) > 2:
+            if trg_b[1] != hyp[0,1] and trg_b[2] == hyp[0,2]:
+                final_rew[1] = final_rew[1]*0.5
+  
+        if show:
+            print("\n Sample-------------Target vs Eval_net prediction:--Raw---and---Decoded-----")
+            print("Target: ", trg_b)
+            print("Eval  : ", hyp)
+            print("Reward: ", final_rew, "\n")
+            print(trg, trg_a)
+        return final_rew
+
 
     def dev_network(self):
         """
@@ -793,7 +867,7 @@ class QManager(object):
 
                     # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
                     if self.state_type == 'hidden':
-                        state = torch.cat(hidden, dim=2).squeeze(1).detach().cpu()[0]
+                        state = torch.cat(hidden, dim=2).squeeze(1).detach()[0]
 
                     else:
                         state = torch.FloatTensor(prev_att_vector.squeeze(1).detach().cpu().numpy())
@@ -940,6 +1014,49 @@ class QManager(object):
             unfreeze_model(self.eval_net)
 
         return current_valid_score
+
+    def _save_checkpoint(self) -> None:
+        """
+        Save the model's current parameters and the training state to a
+        checkpoint.
+
+        The training state contains the total number of training steps,
+        the total number of training tokens,
+        the best checkpoint score and iteration so far,
+        and optimizer and scheduler states.
+
+        """
+
+        if not os.path.exists(self.model_dir + "/dqn_model/"):
+            os.makedirs(self.model_dir + "/dqn_model/")
+
+
+        model_path = "{}/dqn_model/{}_dqn.ckpt".format(self.model_dir, self.dev_network_count)
+        state = {
+            "best_ckpt_score": self.best_ckpt_score,
+            "model_state": self.eval_net.state_dict(),
+            "optimizer_state": self.optimizer.state_dict(),
+        }
+        torch.save(state, model_path)
+        
+        if self.ckpt_queue.full():
+            to_delete = self.ckpt_queue.get()  # delete oldest ckpt
+            try:
+                os.remove(to_delete)
+            except FileNotFoundError:
+                self.logger.warning("Wanted to delete old checkpoint %s but "
+                                    "file does not exist.", to_delete)
+
+        self.ckpt_queue.put(model_path)
+
+        best_path = "{}/dqn_model/best_dqn.ckpt".format(self.model_dir)
+        try:
+            # create/modify symbolic link for best checkpoint
+            symlink_update("{}_dqn.ckpt".format(self.dev_network_count), best_path)
+        except OSError:
+            # overwrite best.ckpt
+            torch.save(state, best_path)
+
 
 def dqn_train(cfg_file, ckpt: str, output_path: str = None) -> None:
     """
