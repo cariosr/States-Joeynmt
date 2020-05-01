@@ -14,7 +14,6 @@ def generate_samples(n=10000, low=0, high=10, maxlen=10):
         samples.append(sample)
     return samples
 
-
 def sample_to_str(sample):
     return " ".join(map(str, sample))
 
