@@ -45,8 +45,10 @@ def distribute_reward(trg, hyp, blue_batch_score, eos_index):
             first_eos = first_eos[0][0]
             idx = np.arange(first_eos, len(hyp[0]))
             hyp[i][idx] = eos_index
-
+            
     extra_col = eos_index * torch.ones(batch_size_aux, dtype=int).view(batch_size_aux, -1)
+    if self.use_cuda:
+        extra_col = extra_col.cuda()
     trg = torch.cat([trg, extra_col], dim=1).detach()
 
     if torch.sum(torch.sum(hyp == eos_index, dim=1) == 0) > 0:
@@ -702,6 +704,8 @@ class QManager(object):
 
         batch_size_aux = len(hyp)
         extra_col = self.eos_index * torch.ones(batch_size_aux, dtype=int).view(batch_size_aux, -1)
+        if self.use_cuda:
+            extra_col = extra_col.cuda()
         trg = torch.cat([trg, extra_col], dim=1).detach()
         # for i in range (len(hyp)):
         #     first_eos = np.where (hyp[i] == self.eos_index)
@@ -946,7 +950,9 @@ class QManager(object):
                 r_total += np.sum(r)
 
                 if self.dev_network_count == 0:
-                    extra_col = self.eos_index *torch.ones(len(batch.trg_input) , dtype=int).view(len(batch.trg_input),-1) 
+                    extra_col = self.eos_index *torch.ones(len(batch.trg_input) , dtype=int).view(len(batch.trg_input),-1)
+                    if self.use_cuda:
+                        extra_col = extra_col.cuda()
                     trg_extra_col = torch.cat([batch.trg_input,extra_col ], dim= 1).detach()
                     roptimal = self.Reward_batch(batch.trg_input, trg_extra_col , show = False)
                     #print('roptimal: ', roptimal)
