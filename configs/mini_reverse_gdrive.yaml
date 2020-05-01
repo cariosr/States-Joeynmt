@@ -28,7 +28,7 @@ training:
     learning_rate_min: 0.0002
     weight_decay: 0.0
     clip_grad_norm: 1.0
-    batch_size: 10
+    batch_size: 1
     batch_type: "sentence"
     scheduling: "plateau"
     patience: 5
@@ -83,12 +83,12 @@ dqn:
     egreed_min: 0.001
     gamma_max: 0.9
     gamma_min: 0.3
-    nu_iter: 10
-    mem_cap: 4000
+    nu_iter: 300
+    mem_cap: 5000
     beam_min: 1
     beam_max: 50
-    state_type: 'hidden'
-    reward_type: 'bleu_batch'
+    state_type: 'attention'
+    reward_type: 'hc_batch'
     nu_pretrain: 40
     N_layers: 4
-    other_descrip: '_mini_reverse_with_batch'
+    other_descrip: '_mini_reverse_with_batch_w_attention'
