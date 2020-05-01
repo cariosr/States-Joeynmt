@@ -1,0 +1,392 @@
+2020-05-02 00:23:33,573 Hello! This is Joey-NMT.
+2020-05-02 00:23:33,575 Total params: 18984
+2020-05-02 00:23:33,576 Trainable parameters: ['decoder.att_vector_layer.bias', 'decoder.att_vector_layer.weight', 'decoder.attention.key_layer.weight', 'decoder.bridge_layer.bias', 'decoder.bridge_layer.weight', 'decoder.output_layer.weight', 'decoder.rnn.bias_hh_l0', 'decoder.rnn.bias_ih_l0', 'decoder.rnn.weight_hh_l0', 'decoder.rnn.weight_ih_l0', 'encoder.rnn.bias_hh_l0', 'encoder.rnn.bias_hh_l0_reverse', 'encoder.rnn.bias_ih_l0', 'encoder.rnn.bias_ih_l0_reverse', 'encoder.rnn.weight_hh_l0', 'encoder.rnn.weight_hh_l0_reverse', 'encoder.rnn.weight_ih_l0', 'encoder.rnn.weight_ih_l0_reverse', 'src_embed.lut.weight', 'trg_embed.lut.weight']
+2020-05-02 00:23:33,577 cfg.name                           : mini_reverse_2000_200_200_5_5
+2020-05-02 00:23:33,577 cfg.data.src                       : src
+2020-05-02 00:23:33,577 cfg.data.trg                       : trg
+2020-05-02 00:23:33,577 cfg.data.train                     : test/data/mini_reverse_1_1_1_5_5/train
+2020-05-02 00:23:33,577 cfg.data.dev                       : test/data/mini_reverse_1_1_1_5_5/dev
+2020-05-02 00:23:33,577 cfg.data.test                      : test/data/mini_reverse_1_1_1_5_5/test
+2020-05-02 00:23:33,577 cfg.data.level                     : word
+2020-05-02 00:23:33,578 cfg.data.lowercase                 : False
+2020-05-02 00:23:33,578 cfg.data.max_sent_length           : 25
+2020-05-02 00:23:33,578 cfg.data.src_voc_min_freq          : 0
+2020-05-02 00:23:33,578 cfg.data.src_voc_limit             : 100
+2020-05-02 00:23:33,578 cfg.data.trg_voc_min_freq          : 0
+2020-05-02 00:23:33,578 cfg.data.trg_voc_limit             : 100
+2020-05-02 00:23:33,578 cfg.testing.beam_size              : 1
+2020-05-02 00:23:33,578 cfg.testing.alpha                  : 1.0
+2020-05-02 00:23:33,578 cfg.training.random_seed           : 42
+2020-05-02 00:23:33,579 cfg.training.optimizer             : adam
+2020-05-02 00:23:33,579 cfg.training.learning_rate         : 0.001
+2020-05-02 00:23:33,579 cfg.training.learning_rate_min     : 2e-05
+2020-05-02 00:23:33,579 cfg.training.weight_decay          : 0.0
+2020-05-02 00:23:33,579 cfg.training.clip_grad_norm        : 1.0
+2020-05-02 00:23:33,579 cfg.training.batch_size            : 10
+2020-05-02 00:23:33,579 cfg.training.batch_type            : sentence
+2020-05-02 00:23:33,579 cfg.training.scheduling            : plateau
+2020-05-02 00:23:33,579 cfg.training.patience              : 5
+2020-05-02 00:23:33,580 cfg.training.decrease_factor       : 0.5
+2020-05-02 00:23:33,581 cfg.training.early_stopping_metric : eval_metric
+2020-05-02 00:23:33,581 cfg.training.epochs                : 100
+2020-05-02 00:23:33,581 cfg.training.validation_freq       : 10
+2020-05-02 00:23:33,581 cfg.training.logging_freq          : 10
+2020-05-02 00:23:33,581 cfg.training.eval_metric           : bleu
+2020-05-02 00:23:33,581 cfg.training.model_dir             : mini_reverse_1_1_1_5_5_model
+2020-05-02 00:23:33,582 cfg.training.overwrite             : True
+2020-05-02 00:23:33,582 cfg.training.shuffle               : True
+2020-05-02 00:23:33,582 cfg.training.use_cuda              : False
+2020-05-02 00:23:33,582 cfg.training.max_output_length     : 10
+2020-05-02 00:23:33,582 cfg.training.print_valid_sents     : [0, 3, 6]
+2020-05-02 00:23:33,582 cfg.training.keep_last_ckpts       : 2
+2020-05-02 00:23:33,582 cfg.model.initializer              : xavier
+2020-05-02 00:23:33,582 cfg.model.embed_initializer        : normal
+2020-05-02 00:23:33,582 cfg.model.embed_init_weight        : 0.1
+2020-05-02 00:23:33,583 cfg.model.bias_initializer         : zeros
+2020-05-02 00:23:33,583 cfg.model.init_rnn_orthogonal      : False
+2020-05-02 00:23:33,583 cfg.model.lstm_forget_gate         : 0.0
+2020-05-02 00:23:33,583 cfg.model.encoder.rnn_type         : lstm
+2020-05-02 00:23:33,583 cfg.model.encoder.embeddings.embedding_dim : 16
+2020-05-02 00:23:33,583 cfg.model.encoder.embeddings.scale : False
+2020-05-02 00:23:33,583 cfg.model.encoder.hidden_size      : 24
+2020-05-02 00:23:33,583 cfg.model.encoder.bidirectional    : True
+2020-05-02 00:23:33,608 cfg.model.encoder.dropout          : 0.1
+2020-05-02 00:23:33,609 cfg.model.encoder.num_layers       : 1
+2020-05-02 00:23:33,609 cfg.model.decoder.rnn_type         : lstm
+2020-05-02 00:23:33,609 cfg.model.decoder.embeddings.embedding_dim : 16
+2020-05-02 00:23:33,609 cfg.model.decoder.embeddings.scale : False
+2020-05-02 00:23:33,609 cfg.model.decoder.hidden_size      : 24
+2020-05-02 00:23:33,609 cfg.model.decoder.dropout          : 0.1
+2020-05-02 00:23:33,610 cfg.model.decoder.hidden_dropout   : 0.1
+2020-05-02 00:23:33,610 cfg.model.decoder.num_layers       : 1
+2020-05-02 00:23:33,610 cfg.model.decoder.input_feeding    : True
+2020-05-02 00:23:33,610 cfg.model.decoder.init_hidden      : bridge
+2020-05-02 00:23:33,610 cfg.model.decoder.attention        : luong
+2020-05-02 00:23:33,610 cfg.dqn.epochs                     : 1000
+2020-05-02 00:23:33,611 cfg.dqn.sample_size                : 256
+2020-05-02 00:23:33,611 cfg.dqn.lr                         : 5e-05
+2020-05-02 00:23:33,611 cfg.dqn.egreed_max                 : 0.9
+2020-05-02 00:23:33,611 cfg.dqn.egreed_min                 : 0.001
+2020-05-02 00:23:33,611 cfg.dqn.gamma                      : 0.99
+2020-05-02 00:23:33,611 cfg.dqn.nu_iter                    : 100
+2020-05-02 00:23:33,612 cfg.dqn.mem_cap                    : 5000
+2020-05-02 00:23:33,612 cfg.dqn.beam_min                   : 1
+2020-05-02 00:23:33,612 cfg.dqn.beam_max                   : 50
+2020-05-02 00:23:33,612 cfg.dqn.state_type                 : attention
+2020-05-02 00:23:33,612 cfg.dqn.reward_type                : bleu_seq
+2020-05-02 00:23:33,612 cfg.dqn.nu_pretrain                : 0
+2020-05-02 00:23:33,613 cfg.dqn.N_layers                   : 4
+2020-05-02 00:23:33,613 cfg.dqn.batch_size                 : 1
+2020-05-02 00:23:33,613 cfg.dqn.test_variable              : lr
+2020-05-02 00:23:33,617 cfg.dqn.test_range                 : [0.001, 0.0001, 1e-05]
+2020-05-02 00:23:33,618 cfg.dqn.other_descrip              : lr_var
+2020-05-02 00:23:33,618 Data set sizes: 
+	train 1,
+	valid 1,
+	test 1
+2020-05-02 00:23:33,618 First training example:
+	[SRC] 1 2 3 4 5
+	[TRG] 5 4 3 2 1
+2020-05-02 00:23:33,619 First 10 words (src): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 1 (5) 2 (6) 3 (7) 4 (8) 5
+2020-05-02 00:23:33,619 First 10 words (trg): (0) <unk> (1) <pad> (2) <s> (3) </s> (4) 1 (5) 2 (6) 3 (7) 4 (8) 5
+2020-05-02 00:23:33,619 Number of Src words (types): 9
+2020-05-02 00:23:33,620 Number of Trg words (types): 9
+2020-05-02 00:23:33,620 Model(
+	encoder=RecurrentEncoder(LSTM(16, 24, batch_first=True, bidirectional=True)),
+	decoder=RecurrentDecoder(rnn=LSTM(40, 24, batch_first=True), attention=LuongAttention),
+	src_embed=Embeddings(embedding_dim=16, vocab_size=9),
+	trg_embed=Embeddings(embedding_dim=16, vocab_size=9))
+2020-05-02 00:23:33,621 EPOCH 1
+2020-05-02 00:23:33,683 Epoch   1: total training loss 13.28
+2020-05-02 00:23:33,684 EPOCH 2
+2020-05-02 00:23:33,735 Epoch   2: total training loss 13.22
+2020-05-02 00:23:33,736 EPOCH 3
+2020-05-02 00:23:33,815 Epoch   3: total training loss 13.14
+2020-05-02 00:23:33,816 EPOCH 4
+2020-05-02 00:23:33,854 Epoch   4: total training loss 13.10
+2020-05-02 00:23:33,855 EPOCH 5
+2020-05-02 00:23:33,932 Epoch   5: total training loss 13.06
+2020-05-02 00:23:33,932 EPOCH 6
+2020-05-02 00:23:33,990 Epoch   6: total training loss 13.02
+2020-05-02 00:23:33,991 EPOCH 7
+2020-05-02 00:23:34,036 Epoch   7: total training loss 12.97
+2020-05-02 00:23:34,037 EPOCH 8
+2020-05-02 00:23:34,122 Epoch   8: total training loss 12.91
+2020-05-02 00:23:34,127 EPOCH 9
+2020-05-02 00:23:34,175 Epoch   9: total training loss 12.92
+2020-05-02 00:23:34,176 EPOCH 10
+2020-05-02 00:23:34,214 Epoch  10 Step:       10 Batch Loss:    12.836210 Tokens per Sec:      164, Lr: 0.001000
+2020-05-02 00:23:34,272 Hooray! New best validation result [eval_metric]!
+2020-05-02 00:23:34,272 Saving new checkpoint.
+2020-05-02 00:23:34,279 Example #0
+2020-05-02 00:23:34,279 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:34,279 	Raw hypothesis: ['2', '2', '2', '2', '2', '2', '2', '2', '2', '2']
+2020-05-02 00:23:34,279 	Source:     1 2 3 4 5
+2020-05-02 00:23:34,279 	Reference:  5 4 3 2 1
+2020-05-02 00:23:34,279 	Hypothesis: 2 2 2 2 2 2 2 2 2 2
+2020-05-02 00:23:34,279 Validation result (greedy) at epoch  10, step       10: bleu:   0.00, loss:  12.7986, ppl:   8.4410, duration: 0.0653s
+2020-05-02 00:23:34,919 Epoch  10: total training loss 12.84
+2020-05-02 00:23:34,920 EPOCH 11
+2020-05-02 00:23:34,959 Epoch  11: total training loss 12.77
+2020-05-02 00:23:34,960 EPOCH 12
+2020-05-02 00:23:35,010 Epoch  12: total training loss 12.81
+2020-05-02 00:23:35,011 EPOCH 13
+2020-05-02 00:23:35,100 Epoch  13: total training loss 12.66
+2020-05-02 00:23:35,100 EPOCH 14
+2020-05-02 00:23:35,158 Epoch  14: total training loss 12.63
+2020-05-02 00:23:35,159 EPOCH 15
+2020-05-02 00:23:35,239 Epoch  15: total training loss 12.59
+2020-05-02 00:23:35,239 EPOCH 16
+2020-05-02 00:23:35,299 Epoch  16: total training loss 12.54
+2020-05-02 00:23:35,300 EPOCH 17
+2020-05-02 00:23:35,399 Epoch  17: total training loss 12.48
+2020-05-02 00:23:35,400 EPOCH 18
+2020-05-02 00:23:35,458 Epoch  18: total training loss 12.43
+2020-05-02 00:23:35,459 EPOCH 19
+2020-05-02 00:23:35,535 Epoch  19: total training loss 12.36
+2020-05-02 00:23:35,536 EPOCH 20
+2020-05-02 00:23:35,595 Epoch  20 Step:       20 Batch Loss:    12.228878 Tokens per Sec:      104, Lr: 0.001000
+2020-05-02 00:23:35,626 Example #0
+2020-05-02 00:23:35,626 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:35,626 	Raw hypothesis: ['2', '2', '2', '3', '2', '3', '2', '3', '2', '3']
+2020-05-02 00:23:35,627 	Source:     1 2 3 4 5
+2020-05-02 00:23:35,627 	Reference:  5 4 3 2 1
+2020-05-02 00:23:35,627 	Hypothesis: 2 2 2 3 2 3 2 3 2 3
+2020-05-02 00:23:35,627 Validation result (greedy) at epoch  20, step       20: bleu:   0.00, loss:  12.2095, ppl:   7.6516, duration: 0.0323s
+2020-05-02 00:23:36,180 Epoch  20: total training loss 12.23
+2020-05-02 00:23:36,181 EPOCH 21
+2020-05-02 00:23:36,214 Epoch  21: total training loss 12.24
+2020-05-02 00:23:36,215 EPOCH 22
+2020-05-02 00:23:36,254 Epoch  22: total training loss 12.08
+2020-05-02 00:23:36,254 EPOCH 23
+2020-05-02 00:23:36,286 Epoch  23: total training loss 12.00
+2020-05-02 00:23:36,287 EPOCH 24
+2020-05-02 00:23:36,343 Epoch  24: total training loss 11.84
+2020-05-02 00:23:36,344 EPOCH 25
+2020-05-02 00:23:36,415 Epoch  25: total training loss 11.93
+2020-05-02 00:23:36,417 EPOCH 26
+2020-05-02 00:23:36,471 Epoch  26: total training loss 12.06
+2020-05-02 00:23:36,472 EPOCH 27
+2020-05-02 00:23:36,522 Epoch  27: total training loss 11.58
+2020-05-02 00:23:36,523 EPOCH 28
+2020-05-02 00:23:36,570 Epoch  28: total training loss 11.67
+2020-05-02 00:23:36,571 EPOCH 29
+2020-05-02 00:23:36,611 Epoch  29: total training loss 11.52
+2020-05-02 00:23:36,611 EPOCH 30
+2020-05-02 00:23:36,686 Epoch  30 Step:       30 Batch Loss:    11.220517 Tokens per Sec:       81, Lr: 0.001000
+2020-05-02 00:23:36,710 Example #0
+2020-05-02 00:23:36,711 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:36,711 	Raw hypothesis: ['2', '2', '2', '3', '3', '3', '3', '3', '3', '3']
+2020-05-02 00:23:36,711 	Source:     1 2 3 4 5
+2020-05-02 00:23:36,711 	Reference:  5 4 3 2 1
+2020-05-02 00:23:36,711 	Hypothesis: 2 2 2 3 3 3 3 3 3 3
+2020-05-02 00:23:36,711 Validation result (greedy) at epoch  30, step       30: bleu:   0.00, loss:  11.2913, ppl:   6.5658, duration: 0.0252s
+2020-05-02 00:23:37,317 Epoch  30: total training loss 11.22
+2020-05-02 00:23:37,318 EPOCH 31
+2020-05-02 00:23:37,376 Epoch  31: total training loss 11.27
+2020-05-02 00:23:37,377 EPOCH 32
+2020-05-02 00:23:37,447 Epoch  32: total training loss 11.20
+2020-05-02 00:23:37,448 EPOCH 33
+2020-05-02 00:23:37,480 Epoch  33: total training loss 10.94
+2020-05-02 00:23:37,480 EPOCH 34
+2020-05-02 00:23:37,518 Epoch  34: total training loss 11.04
+2020-05-02 00:23:37,518 EPOCH 35
+2020-05-02 00:23:37,557 Epoch  35: total training loss 10.92
+2020-05-02 00:23:37,557 EPOCH 36
+2020-05-02 00:23:37,619 Epoch  36: total training loss 10.75
+2020-05-02 00:23:37,620 EPOCH 37
+2020-05-02 00:23:37,658 Epoch  37: total training loss 10.67
+2020-05-02 00:23:37,659 EPOCH 38
+2020-05-02 00:23:37,697 Epoch  38: total training loss 10.59
+2020-05-02 00:23:37,698 EPOCH 39
+2020-05-02 00:23:37,733 Epoch  39: total training loss 10.49
+2020-05-02 00:23:37,734 EPOCH 40
+2020-05-02 00:23:37,795 Epoch  40 Step:       40 Batch Loss:    10.308446 Tokens per Sec:       99, Lr: 0.001000
+2020-05-02 00:23:37,822 Example #0
+2020-05-02 00:23:37,823 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:37,823 	Raw hypothesis: ['2', '2', '2', '3', '3', '2', '3', '3', '2', '3']
+2020-05-02 00:23:37,823 	Source:     1 2 3 4 5
+2020-05-02 00:23:37,823 	Reference:  5 4 3 2 1
+2020-05-02 00:23:37,823 	Hypothesis: 2 2 2 3 3 2 3 3 2 3
+2020-05-02 00:23:37,824 Validation result (greedy) at epoch  40, step       40: bleu:   0.00, loss:  10.2088, ppl:   5.4820, duration: 0.0282s
+2020-05-02 00:23:38,321 Epoch  40: total training loss 10.31
+2020-05-02 00:23:38,321 EPOCH 41
+2020-05-02 00:23:38,371 Epoch  41: total training loss 10.13
+2020-05-02 00:23:38,371 EPOCH 42
+2020-05-02 00:23:38,457 Epoch  42: total training loss 10.06
+2020-05-02 00:23:38,458 EPOCH 43
+2020-05-02 00:23:38,510 Epoch  43: total training loss 9.76
+2020-05-02 00:23:38,511 EPOCH 44
+2020-05-02 00:23:38,598 Epoch  44: total training loss 10.08
+2020-05-02 00:23:38,599 EPOCH 45
+2020-05-02 00:23:38,644 Epoch  45: total training loss 9.76
+2020-05-02 00:23:38,645 EPOCH 46
+2020-05-02 00:23:38,689 Epoch  46: total training loss 9.93
+2020-05-02 00:23:38,692 EPOCH 47
+2020-05-02 00:23:38,786 Epoch  47: total training loss 9.61
+2020-05-02 00:23:38,791 EPOCH 48
+2020-05-02 00:23:38,846 Epoch  48: total training loss 9.13
+2020-05-02 00:23:38,846 EPOCH 49
+2020-05-02 00:23:38,934 Epoch  49: total training loss 9.16
+2020-05-02 00:23:38,934 EPOCH 50
+2020-05-02 00:23:38,981 Epoch  50 Step:       50 Batch Loss:     9.025398 Tokens per Sec:      127, Lr: 0.001000
+2020-05-02 00:23:39,077 Hooray! New best validation result [eval_metric]!
+2020-05-02 00:23:39,078 Saving new checkpoint.
+2020-05-02 00:23:39,088 Example #0
+2020-05-02 00:23:39,088 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:39,088 	Raw hypothesis: ['5', '4', '3', '2', '2']
+2020-05-02 00:23:39,088 	Source:     1 2 3 4 5
+2020-05-02 00:23:39,088 	Reference:  5 4 3 2 1
+2020-05-02 00:23:39,088 	Hypothesis: 5 4 3 2 2
+2020-05-02 00:23:39,089 Validation result (greedy) at epoch  50, step       50: bleu:  66.87, loss:   8.9347, ppl:   4.4332, duration: 0.1018s
+2020-05-02 00:23:39,847 Epoch  50: total training loss 9.03
+2020-05-02 00:23:39,847 EPOCH 51
+2020-05-02 00:23:39,898 Epoch  51: total training loss 9.20
+2020-05-02 00:23:39,899 EPOCH 52
+2020-05-02 00:23:39,949 Epoch  52: total training loss 8.57
+2020-05-02 00:23:39,950 EPOCH 53
+2020-05-02 00:23:40,047 Epoch  53: total training loss 8.50
+2020-05-02 00:23:40,047 EPOCH 54
+2020-05-02 00:23:40,100 Epoch  54: total training loss 8.73
+2020-05-02 00:23:40,101 EPOCH 55
+2020-05-02 00:23:40,172 Epoch  55: total training loss 8.36
+2020-05-02 00:23:40,174 EPOCH 56
+2020-05-02 00:23:40,213 Epoch  56: total training loss 8.63
+2020-05-02 00:23:40,213 EPOCH 57
+2020-05-02 00:23:40,259 Epoch  57: total training loss 8.36
+2020-05-02 00:23:40,260 EPOCH 58
+2020-05-02 00:23:40,330 Epoch  58: total training loss 8.03
+2020-05-02 00:23:40,331 EPOCH 59
+2020-05-02 00:23:40,389 Epoch  59: total training loss 7.72
+2020-05-02 00:23:40,390 EPOCH 60
+2020-05-02 00:23:40,440 Epoch  60 Step:       60 Batch Loss:     7.723579 Tokens per Sec:      122, Lr: 0.001000
+2020-05-02 00:23:40,491 Hooray! New best validation result [eval_metric]!
+2020-05-02 00:23:40,492 Saving new checkpoint.
+2020-05-02 00:23:40,502 Example #0
+2020-05-02 00:23:40,503 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:40,503 	Raw hypothesis: ['5', '4', '3', '2']
+2020-05-02 00:23:40,503 	Source:     1 2 3 4 5
+2020-05-02 00:23:40,503 	Reference:  5 4 3 2 1
+2020-05-02 00:23:40,504 	Hypothesis: 5 4 3 2
+2020-05-02 00:23:40,504 Validation result (greedy) at epoch  60, step       60: bleu:  77.88, loss:   7.4986, ppl:   3.4895, duration: 0.0635s
+2020-05-02 00:23:41,098 Epoch  60: total training loss 7.72
+2020-05-02 00:23:41,098 EPOCH 61
+2020-05-02 00:23:41,169 Epoch  61: total training loss 7.36
+2020-05-02 00:23:41,170 EPOCH 62
+2020-05-02 00:23:41,217 Epoch  62: total training loss 7.40
+2020-05-02 00:23:41,218 EPOCH 63
+2020-05-02 00:23:41,284 Epoch  63: total training loss 7.66
+2020-05-02 00:23:41,285 EPOCH 64
+2020-05-02 00:23:41,348 Epoch  64: total training loss 7.37
+2020-05-02 00:23:41,349 EPOCH 65
+2020-05-02 00:23:41,380 Epoch  65: total training loss 7.25
+2020-05-02 00:23:41,381 EPOCH 66
+2020-05-02 00:23:41,414 Epoch  66: total training loss 6.61
+2020-05-02 00:23:41,415 EPOCH 67
+2020-05-02 00:23:41,472 Epoch  67: total training loss 6.69
+2020-05-02 00:23:41,472 EPOCH 68
+2020-05-02 00:23:41,507 Epoch  68: total training loss 6.89
+2020-05-02 00:23:41,508 EPOCH 69
+2020-05-02 00:23:41,591 Epoch  69: total training loss 6.66
+2020-05-02 00:23:41,592 EPOCH 70
+2020-05-02 00:23:41,687 Epoch  70 Step:       70 Batch Loss:     6.204493 Tokens per Sec:       64, Lr: 0.001000
+2020-05-02 00:23:41,759 Example #0
+2020-05-02 00:23:41,759 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:41,759 	Raw hypothesis: ['5', '4', '3', '2']
+2020-05-02 00:23:41,759 	Source:     1 2 3 4 5
+2020-05-02 00:23:41,759 	Reference:  5 4 3 2 1
+2020-05-02 00:23:41,759 	Hypothesis: 5 4 3 2
+2020-05-02 00:23:41,759 Validation result (greedy) at epoch  70, step       70: bleu:  77.88, loss:   6.1730, ppl:   2.7978, duration: 0.0719s
+2020-05-02 00:23:42,608 Epoch  70: total training loss 6.20
+2020-05-02 00:23:42,608 EPOCH 71
+2020-05-02 00:23:42,639 Epoch  71: total training loss 6.15
+2020-05-02 00:23:42,640 EPOCH 72
+2020-05-02 00:23:42,704 Epoch  72: total training loss 6.06
+2020-05-02 00:23:42,707 EPOCH 73
+2020-05-02 00:23:42,815 Epoch  73: total training loss 5.90
+2020-05-02 00:23:42,816 EPOCH 74
+2020-05-02 00:23:42,904 Epoch  74: total training loss 5.54
+2020-05-02 00:23:42,907 EPOCH 75
+2020-05-02 00:23:42,998 Epoch  75: total training loss 5.68
+2020-05-02 00:23:43,000 EPOCH 76
+2020-05-02 00:23:43,107 Epoch  76: total training loss 5.15
+2020-05-02 00:23:43,108 EPOCH 77
+2020-05-02 00:23:43,223 Epoch  77: total training loss 5.67
+2020-05-02 00:23:43,224 EPOCH 78
+2020-05-02 00:23:43,311 Epoch  78: total training loss 5.46
+2020-05-02 00:23:43,312 EPOCH 79
+2020-05-02 00:23:43,374 Epoch  79: total training loss 5.23
+2020-05-02 00:23:43,375 EPOCH 80
+2020-05-02 00:23:43,412 Epoch  80 Step:       80 Batch Loss:     5.159091 Tokens per Sec:      161, Lr: 0.001000
+2020-05-02 00:23:43,484 Hooray! New best validation result [eval_metric]!
+2020-05-02 00:23:43,485 Saving new checkpoint.
+2020-05-02 00:23:43,491 Example #0
+2020-05-02 00:23:43,494 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:43,494 	Raw hypothesis: ['5', '4', '3', '2', '1']
+2020-05-02 00:23:43,494 	Source:     1 2 3 4 5
+2020-05-02 00:23:43,494 	Reference:  5 4 3 2 1
+2020-05-02 00:23:43,495 	Hypothesis: 5 4 3 2 1
+2020-05-02 00:23:43,495 Validation result (greedy) at epoch  80, step       80: bleu: 100.00, loss:   4.9601, ppl:   2.2857, duration: 0.0820s
+2020-05-02 00:23:44,475 Epoch  80: total training loss 5.16
+2020-05-02 00:23:44,475 EPOCH 81
+2020-05-02 00:23:44,576 Epoch  81: total training loss 4.51
+2020-05-02 00:23:44,576 EPOCH 82
+2020-05-02 00:23:44,680 Epoch  82: total training loss 4.84
+2020-05-02 00:23:44,684 EPOCH 83
+2020-05-02 00:23:44,775 Epoch  83: total training loss 5.26
+2020-05-02 00:23:44,776 EPOCH 84
+2020-05-02 00:23:44,907 Epoch  84: total training loss 4.60
+2020-05-02 00:23:44,908 EPOCH 85
+2020-05-02 00:23:44,988 Epoch  85: total training loss 4.83
+2020-05-02 00:23:44,989 EPOCH 86
+2020-05-02 00:23:45,102 Epoch  86: total training loss 4.72
+2020-05-02 00:23:45,103 EPOCH 87
+2020-05-02 00:23:45,184 Epoch  87: total training loss 5.21
+2020-05-02 00:23:45,188 EPOCH 88
+2020-05-02 00:23:45,356 Epoch  88: total training loss 4.52
+2020-05-02 00:23:45,357 EPOCH 89
+2020-05-02 00:23:45,462 Epoch  89: total training loss 3.78
+2020-05-02 00:23:45,463 EPOCH 90
+2020-05-02 00:23:45,595 Epoch  90 Step:       90 Batch Loss:     4.188752 Tokens per Sec:       46, Lr: 0.001000
+2020-05-02 00:23:45,698 Example #0
+2020-05-02 00:23:45,701 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:45,701 	Raw hypothesis: ['5', '4', '3', '2', '1']
+2020-05-02 00:23:45,701 	Source:     1 2 3 4 5
+2020-05-02 00:23:45,702 	Reference:  5 4 3 2 1
+2020-05-02 00:23:45,702 	Hypothesis: 5 4 3 2 1
+2020-05-02 00:23:45,703 Validation result (greedy) at epoch  90, step       90: bleu: 100.00, loss:   3.9747, ppl:   1.9395, duration: 0.1059s
+2020-05-02 00:23:46,727 Epoch  90: total training loss 4.19
+2020-05-02 00:23:46,728 EPOCH 91
+2020-05-02 00:23:46,814 Epoch  91: total training loss 4.13
+2020-05-02 00:23:46,814 EPOCH 92
+2020-05-02 00:23:46,889 Epoch  92: total training loss 4.14
+2020-05-02 00:23:46,889 EPOCH 93
+2020-05-02 00:23:46,999 Epoch  93: total training loss 3.81
+2020-05-02 00:23:46,999 EPOCH 94
+2020-05-02 00:23:47,070 Epoch  94: total training loss 3.97
+2020-05-02 00:23:47,071 EPOCH 95
+2020-05-02 00:23:47,132 Epoch  95: total training loss 4.13
+2020-05-02 00:23:47,133 EPOCH 96
+2020-05-02 00:23:47,215 Epoch  96: total training loss 3.84
+2020-05-02 00:23:47,215 EPOCH 97
+2020-05-02 00:23:47,294 Epoch  97: total training loss 3.85
+2020-05-02 00:23:47,294 EPOCH 98
+2020-05-02 00:23:47,401 Epoch  98: total training loss 3.49
+2020-05-02 00:23:47,401 EPOCH 99
+2020-05-02 00:23:47,466 Epoch  99: total training loss 3.28
+2020-05-02 00:23:47,466 EPOCH 100
+2020-05-02 00:23:47,571 Epoch 100 Step:      100 Batch Loss:     3.096586 Tokens per Sec:       58, Lr: 0.001000
+2020-05-02 00:23:47,624 Example #0
+2020-05-02 00:23:47,624 	Raw source:     ['1', '2', '3', '4', '5']
+2020-05-02 00:23:47,625 	Raw hypothesis: ['5', '4', '3', '2', '1']
+2020-05-02 00:23:47,625 	Source:     1 2 3 4 5
+2020-05-02 00:23:47,625 	Reference:  5 4 3 2 1
+2020-05-02 00:23:47,625 	Hypothesis: 5 4 3 2 1
+2020-05-02 00:23:47,625 Validation result (greedy) at epoch 100, step      100: bleu: 100.00, loss:   3.1654, ppl:   1.6948, duration: 0.0538s
+2020-05-02 00:23:48,799 Epoch 100: total training loss 3.10
+2020-05-02 00:23:48,799 Training ended after 100 epochs.
+2020-05-02 00:23:48,824 Best validation result (greedy) at step       80: 100.00 eval_metric.
+2020-05-02 00:23:48,930  dev bleu: 100.00 [Greedy decoding]
+2020-05-02 00:23:48,930 Translations saved to: mini_reverse_1_1_1_5_5_model/00000080.hyps.dev
+2020-05-02 00:23:48,981 test bleu: 100.00 [Greedy decoding]
+2020-05-02 00:23:48,981 Translations saved to: mini_reverse_1_1_1_5_5_model/00000080.hyps.test

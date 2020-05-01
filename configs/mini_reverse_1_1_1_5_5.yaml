@@ -1,12 +1,11 @@
-name: "prototype"
+name: "mini_reverse_2000_200_200_5_5"
 
 data:
     src: "src"
     trg: "trg"
-    # generate data with scripts/generate_reverse_task.py
-    train: "test/data/prototype/train"
-    dev: "test/data/prototype/dev"
-    test: "test/data/prototype/test"
+    train: "test/data/mini_reverse_1_1_1_5_5/train"
+    dev: "test/data/mini_reverse_1_1_1_5_5/dev"
+    test: "test/data/mini_reverse_1_1_1_5_5/test"
     level: "word"
     lowercase: False
     max_sent_length: 25
@@ -14,8 +13,8 @@ data:
     src_voc_limit: 100
     trg_voc_min_freq: 0
     trg_voc_limit: 100
-    #src_vocab: "prototype_model/src_vocab.txt"
-    #trg_vocab: "prototype_model/trg_vocab.txt"
+    #src_vocab: "mini_reverse_1_1_1_5_5/src_vocab.txt"
+    #trg_vocab: "mini_reverse_1_1_1_5_5/trg_vocab.txt"
 
 testing:
     beam_size: 1
@@ -34,11 +33,11 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 10
+    epochs: 100
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
-    model_dir: "prototype_model"
+    model_dir: "mini_reverse_1_1_1_5_5_model"
     # model_dir: "/content/gdrive/My Drive/models/batch_V0"
     overwrite: True
     shuffle: True
@@ -81,8 +80,7 @@ dqn:
     lr: 0.00005
     egreed_max: 0.9
     egreed_min: 0.001
-    gamma_max: 0.9
-    gamma_min: 0.3
+    gamma: 0.99
     nu_iter: 100
     mem_cap: 5000
     beam_min: 1
@@ -91,4 +89,13 @@ dqn:
     reward_type: 'bleu_seq'
     nu_pretrain: 0
     N_layers: 4
-    other_descrip: 'lr__00005_rep_results'
+    batch_size: 1
+    test_variable: 'lr'
+    test_range: [0.001, 0.0001, 0.00001]
+    other_descrip: 'lr_var'
+    #test_variable: 'gamma'
+    #test_range: [0.8, 0.9, 0.99]
+    #other_descrip: 'gamma_var'
+    #test_variable: 'batch_size'
+    #test_range: [32, 128, 512]
+    #other_descrip: 'batch_size_var'
