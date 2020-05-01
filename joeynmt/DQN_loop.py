@@ -724,7 +724,7 @@ class QManager(object):
         for i in np.arange(batch_size_aux):
             
             hyp_i = hyp[i]
-            trg_i = np.asarray(trg[i])
+            trg_i = trg[i].detach().cpu().numpy()
             # trg_i = trg[i]
             
             # print("hyp_i: ", type(hyp_i), hyp_i.shape, '\n', hyp_i.reshape([1,-1]))
