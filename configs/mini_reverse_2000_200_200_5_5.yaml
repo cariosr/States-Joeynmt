@@ -1,12 +1,12 @@
-name: "reverse_experiment"
+name: "mini_reverse_2000_200_200_5_5"
 
 data:
     src: "src"
     trg: "trg"
     # generate data with scripts/generate_reverse_task.py
-    train: "test/data/mini_reverse_0/train"
-    dev: "test/data/mini_reverse_0/dev"
-    test: "test/data/mini_reverse_0/test"
+    train: "test/data/mini_reverse_2000_200_200_5_5/train"
+    dev: "test/data/mini_reverse_2000_200_200_5_5/dev"
+    test: "test/data/mini_reverse_2000_200_200_5_5/test"
     level: "word"
     lowercase: False
     max_sent_length: 25
@@ -14,8 +14,8 @@ data:
     src_voc_limit: 100
     trg_voc_min_freq: 0
     trg_voc_limit: 100
-    #src_vocab: "mini_reverse_model/src_vocab.txt"
-    #trg_vocab: "mini_reverse_model/trg_vocab.txt"
+    #src_vocab: "mini_reverse_2000_200_200_5_5_model/src_vocab.txt"
+    #trg_vocab: "mini_reverse_2000_200_200_5_5_model/trg_vocab.txt"
 
 testing:
     beam_size: 1
@@ -25,7 +25,7 @@ training:
     random_seed: 42
     optimizer: "adam"
     learning_rate: 0.001
-    learning_rate_min: 0.0002
+    learning_rate_min: 0.00002
     weight_decay: 0.0
     clip_grad_norm: 1.0
     batch_size: 10
@@ -34,11 +34,12 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 10
+    epochs: 50
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
-    model_dir: "mini_reverse_model_0"
+    model_dir: "mini_reverse_2000_200_200_5_5_model"
+    # model_dir: "/content/gdrive/My Drive/models/batch_V0"
     overwrite: True
     shuffle: True
     use_cuda: False
@@ -74,22 +75,28 @@ model:
         input_feeding: True
         init_hidden: "bridge"
         attention: "luong"
-
 dqn:
-    epochs: 2000
+    epochs: 1000
     sample_size: 256
     lr: 0.00005
     egreed_max: 0.9
     egreed_min: 0.001
-    gamma_max: 0.9
-    gamma_min: 0.3
-    nu_iter: 10
-    mem_cap: 4000
+    gamma: 0.99
+    nu_iter: 100
+    mem_cap: 5000
     beam_min: 1
     beam_max: 50
-    state_type: 'hidden'
-    reward_type: 'bleu_batch'
-    nu_pretrain: 40
+    state_type: 'attention'
+    reward_type: 'bleu_seq'
+    nu_pretrain: 0
     N_layers: 4
     batch_size: 10
-    other_descrip: '_mini_reverse_with_batch'
+    test_variable: 'lr'
+    test_range: [0.001, 0.0001, 0.00001]
+    other_descrip: 'lr_var'
+    # test_variable: 'gamma'
+    # test_range: [0.8, 0.9, 0.99]
+    # other_descrip: 'gamma_var'
+    # test_variable: 'batch_size'
+    # test_range: [32, 128, 512]
+    # other_descrip: 'batch_size_var'

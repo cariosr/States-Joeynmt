@@ -24,7 +24,7 @@ testing:
 training:
     random_seed: 42
     optimizer: "adam"
-    learning_rate: 0.01
+    learning_rate: 0.001
     learning_rate_min: 0.00002
     weight_decay: 0.0
     clip_grad_norm: 1.0
@@ -39,6 +39,7 @@ training:
     logging_freq: 10
     eval_metric: "bleu"
     model_dir: "prototype_model"
+    # model_dir: "/content/gdrive/My Drive/models/batch_V0"
     overwrite: True
     shuffle: True
     use_cuda: False
@@ -75,18 +76,19 @@ model:
         init_hidden: "bridge"
         attention: "luong"
 dqn:
-    epochs: 500
+    epochs: 1000
     sample_size: 256
     lr: 0.00005
     egreed_max: 0.9
     egreed_min: 0.001
     gamma_max: 0.9
     gamma_min: 0.3
-    nu_iter: 300
+    nu_iter: 100
     mem_cap: 5000
     beam_min: 1
     beam_max: 50
     state_type: 'attention'
     reward_type: 'bleu_seq'
     nu_pretrain: 0
+    N_layers: 4
     other_descrip: 'lr__00005_rep_results'

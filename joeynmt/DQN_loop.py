@@ -161,7 +161,7 @@ class QManager(object):
                 step = "best"
 
         set_seed(seed=cfg["training"].get("random_seed", 42))
-        self.batch_size = cfg["training"]["batch_size"]
+        self.batch_size = cfg["dqn"]["batch_size"]
         self.batch_type = cfg["training"].get(
             "eval_batch_type", cfg["training"].get("batch_type", "sentence"))
         self.use_cuda = cfg["training"].get("use_cuda", False)
@@ -176,9 +176,11 @@ class QManager(object):
         self.lr = cfg["dqn"].get("lr", 0.01)
         self.egreed_max = cfg["dqn"].get("egreed_max", 0.9)
         self.egreed_min = cfg["dqn"].get("egreed_min", 0.01)
-        self.gamma_max = cfg["dqn"].get("gamma_max", 0.9)
-        self.gamma_min = cfg["dqn"].get("gamma_min", 0.5)
+        self.gamma = cfg["dqn"].get("gamma", 0.9)
+        #self.gamma_min = cfg["dqn"].get("gamma_min", 0.5)
+        
         self.nu_iter = cfg["dqn"]["nu_iter"]
+        
         self.mem_cap = cfg["dqn"]["mem_cap"]
         self.beam_min = cfg["dqn"]["beam_min"]
         self.beam_max = cfg["dqn"]["beam_max"]
@@ -195,7 +197,7 @@ class QManager(object):
         self.N_layers = cfg["dqn"]["N_layers"]
 
         self.actions_size = len(src_vocab)
-        self.gamma = None
+        #self.gamma = None
         # print("Sample size: ", self.sample_size )
         # print("State size: ", self.state_size)
         # print("Action size: ", self.actions_size)
@@ -256,7 +258,9 @@ class QManager(object):
         # add as many hyperparameters as desired in the following manner:
         # -write the name of the hyperparameter at front then the value
         # -write underscore after each hyperparameter, except for the latest one
-        relevant_hyp = "nu_pretrain=" + str(self.nu_pretrain) + "_" + "reward_type=" + str(self.reward_type) + cfg["dqn"]["other_descrip"]
+        relevant_hyp = "gamma=" + str(self.gamma) + "_" + "batch_size=" + str(self.batch_size)  \
+                    + "_" + "lr=" + str(self.lr) \
+                    + "_" + "reward_type=" + str(self.reward_type) + cfg["dqn"]["other_descrip"]
         #others not important parameters
         self.index_fin = None
         # construct the name of the folder for tensorboard for the test given the date and the relevant_hyp
@@ -292,12 +296,11 @@ class QManager(object):
             #self.gamma = self.gamma_max*(1 - epoch_no/(2*self.epochs))
             # keep the beam_dqn = 1, otherwise is harmfull to the learning
             beam_dqn = 1
-            self.gamma = 0.99
             if self.learn_step_counter < self.nu_pretrain:
                 # print("On the pretrain of the Q target network. The beam_dqn =1.")
                 beam_dqn = 1
                 egreed = self.egreed_max
-                self.gamma = (self.gamma_min + self.gamma_max)/2
+                #self.gamma = (self.gamma_min + self.gamma_max)/2
             else:
                 self.count_post_pre_train += 1
                 # beam_dqn = int(beam_dqn*math.pow(1.001,self.count_post_pre_train))
@@ -307,8 +310,8 @@ class QManager(object):
                 if egreed < self.egreed_min:
                     egreed = self.egreed_min
 
-                if self.gamma < self.gamma_min:
-                    self.gamma = self.gamma_min
+                # if self.gamma < self.gamma_min:
+                #     self.gamma = self.gamma_min
 
                 if beam_dqn > self.actions_size:
                     print("The beam_dqn cannot exceed the action size!")
