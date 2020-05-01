@@ -47,10 +47,10 @@ def distribute_reward(trg, hyp, blue_batch_score, eos_index):
             hyp[i][idx] = eos_index
 
     extra_col = eos_index * torch.ones(batch_size_aux, dtype=int).view(batch_size_aux, -1)
-    trg = torch.cat([trg, extra_col], dim=1)
+    trg = torch.cat([trg, extra_col], dim=1).detach()
 
     if torch.sum(torch.sum(hyp == eos_index, dim=1) == 0) > 0:
-        hyp = torch.cat([hyp, extra_col], dim=1)
+        hyp = torch.cat([hyp, extra_col], dim=1).detach()
 
     len_batch = (torch.sum(~torch.eq(hyp, eos_index), dim=1)).view(batch_size_aux, -1)
     hyp = hyp[:, 1:]
@@ -239,7 +239,10 @@ class QManager(object):
             self.target_net.cuda()
             self.loss_func.cuda()
 
-
+        if self.reward_type == "bleu_batch":
+            print("You select the reward based on the bleu_batch ")
+        elif self.reward_type == "hc_batch":
+            print("You select the reward based on the Hand Crafted Reward ")
 
         # whether to use beam search for decoding, 0: greedy decoding
         beam_size = 1
@@ -270,10 +273,7 @@ class QManager(object):
         #Reward funtion related:
         self.logger.info("As states we set the : %s", self.state_type)
         
-        if self.reward_type == "bleu_batch":
-            print("You select the reward based on the bleu_batch ")
-            self.Reward = self.Reward_batch
-
+        
 
     def Collecting_experiences(self)-> None:
         """
@@ -490,11 +490,11 @@ class QManager(object):
                     #     r = self.Reward(batch.trg_input, hyp, show=False)  # 1 , time -1 
 
                     if epoch_no == 0 and batch_i == 0:
-                        r = self.Reward(batch.trg_input, hyp, show=True)  # 1 , time-1    # batch, time-1
+                        r = self.Reward_batch(batch.trg_input, hyp, show=True)  # 1 , time-1    # batch, time-1
                         print ("Function Collecting_experiences")
 
                     else:
-                        r = self.Reward(batch.trg_input, hyp, show=False)  # 1 , time -1 
+                        r = self.Reward_batch(batch.trg_input, hyp, show=False)  # 1 , time -1 
 
                     if epoch_no == 0 and batch_i == 0:
                         self.store_transition(exp_list, r, show =True)
@@ -569,6 +569,12 @@ class QManager(object):
         #Activate the eval_net
         unfreeze_model(self.eval_net)
        # q_eval w.r.t the action in experience
+
+        if self.use_cuda:
+            b_s = b_s.cuda()
+            b_s_ = b_s_.cuda()
+            b_a = b_a.cuda()
+
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
 
@@ -591,6 +597,10 @@ class QManager(object):
             if self.learn_step_counter == self.nu_pretrain:
                 print ("Starting using Q target net....")
             b_a_ = torch.LongTensor(q_next.max(1)[1].view(self.sample_size, 1).long())
+
+        if self.use_cuda:
+            b_a_ = b_a_.cuda()
+
 
         #b_a_ = q_next.max(1)[0].view(self.sample_size, 1).long()   # shape (batch, 1)
         q_eval_next = self.eval_net(b_s_).gather(1, b_a_)   # shape (batch, 1)
@@ -619,6 +629,10 @@ class QManager(object):
         self.tb_writer.add_scalar("learn/q_eval_entropy",
                         aver_entro, self.learn_step_counter)
 
+
+        if self.use_cuda:
+            q_eval = q_eval.cuda()
+            q_target = q_target.cuda()
 
         loss = self.loss_func(q_eval, q_target)
         
@@ -688,7 +702,7 @@ class QManager(object):
 
         batch_size_aux = len(hyp)
         extra_col = self.eos_index * torch.ones(batch_size_aux, dtype=int).view(batch_size_aux, -1)
-        trg = torch.cat([trg, extra_col], dim=1)
+        trg = torch.cat([trg, extra_col], dim=1).detach()
         # for i in range (len(hyp)):
         #     first_eos = np.where (hyp[i] == self.eos_index)
 
@@ -699,7 +713,7 @@ class QManager(object):
         #         #is_eos_index = True
 
         rew_distributed = np.zeros([batch_size_aux, len(hyp[0]) -1 ])
-
+        # print("len(hyp[0]) -1:  ", len(hyp[0]) -1)
         # print("hyp",type(hyp),"\n", hyp)
         # print("trg",type(trg),"\n", trg)
 
@@ -733,9 +747,14 @@ class QManager(object):
             # if references are given, evaluate against them
             assert len(valid_hypotheses) == len(valid_references)
 
-            blue_batch_score = bleu(valid_hypotheses, valid_references)
-            rew_distributed[i, -1] =  blue_batch_score
 
+            if self.reward_type == "bleu_batch":
+                blue_batch_score = bleu(valid_hypotheses, valid_references)
+                rew_distributed[i, -1] =  blue_batch_score
+            elif self.reward_type == "hc_batch":
+                rew_temp = self.Reward_hc(trg_i, hyp_i)
+                # print("rew_i = ", rew_temp)
+                rew_distributed[i] =  rew_temp
 
             # rew_distributed = distribute_reward(trg, hyp, blue_batch_score, self.eos_index)
 
@@ -745,33 +764,34 @@ class QManager(object):
             print("Eval  reward: ", decoded_valid_hyp)
             print("Target reward: ", trg)
             print("Eval  reward: ", hyp)
-            print("Bleu batch reward: ", blue_batch_score)
+            # print("Bleu batch reward: ", blue_batch_score)
             print("Rew vector reward: ", rew_distributed)
 
         return rew_distributed
 
 
-    def Reward_seq(self, trg, hyp, show = False):
+    def Reward_hc(self, trg, hyp, show = False):
         
-        print("trg, hyp")
-        print(trg.shape, hyp.shape)
+        # print("trg, hyp")
+        # print(trg, hyp)
         
-        trg_a = np.asarray(trg[0])
-        trg_b = np.zeros([len(trg_a)+1], dtype = int)
-        trg_b[:len(trg_a)] = trg_a
-        trg_b[-1] = 3
+        # trg_a = np.asarray(trg[0])
+        # trg_b = np.zeros([len(trg_a)+1], dtype = int)
+        # trg_b[:len(trg_a)] = trg_a
+        # trg_b[-1] = 3
 
-        if len(trg_b) != len(hyp[0]):
-            trg_c = np.ones([len(hyp[0])], dtype = int)*(self.actions_size+1)
-            if len(trg_b) > len(hyp[0]):
-                lon = len(hyp[0])
+        trg_b = trg 
+        if len(trg_b) != len(hyp):
+            trg_c = np.ones([len(hyp)], dtype = int)*(self.actions_size+1)
+            if len(trg_b) > len(hyp):
+                lon = len(hyp)
             else:
                 lon = len(trg_b)
             trg_c[:lon] = trg_b[:lon] 
             #print(trg_c[:] == hyp[0,:])
             trg_b = trg_c
 
-        bolles = trg_b[:] == hyp[0,:]
+        bolles = trg_b[:] == hyp[:]
 
         bolles = bolles*np.ones(len(trg_b)) + np.zeros(len(trg_b))
         
@@ -782,7 +802,7 @@ class QManager(object):
         #*4*original* Punish increas as the len increase. The best so far!
         #To fit on the diff computation idea.
         final_rew = bolles*np.arange(1,len(trg_b)+1)
-        final_rew = np.diff(final_rew) -np.arange(len(hyp[0])-1)*0.2
+        final_rew = np.diff(final_rew) -np.arange(len(hyp)-1)*0.2
 
         #To punish the wrong desitions, but the last one (to avoid the large hyp)
         for i in np.arange(1,len(final_rew)-1):
@@ -790,8 +810,8 @@ class QManager(object):
 
         # #*4_1* Include the original ** Best so far (12/04/20). Better regret.
         # # Penalizing the second token when goes worng:
-        if len(hyp[0]) > 2:
-            if trg_b[1] != hyp[0,1] and trg_b[2] == hyp[0,2]:
+        if len(hyp) > 2:
+            if trg_b[1] != hyp[1] and trg_b[2] == hyp[2]:
                 final_rew[1] = final_rew[1]*0.5
   
         if show:
@@ -868,12 +888,17 @@ class QManager(object):
                     # greedy decoding: choose arg max over vocabulary in each step with egreedy porbability
                     if self.state_type == 'hidden':
                         state = torch.cat(hidden, dim=2).squeeze(1).detach()[0]
+                        if self.use_cuda:
+                            state = state.cuda()
+                            
 
                     else:
-                        state = torch.FloatTensor(prev_att_vector.squeeze(1).detach().cpu().numpy())
+                        state = torch.FloatTensor(prev_att_vector.squeeze(1).detach())
+                        if self.use_cuda:
+                            state = state.cuda()
 
-                    if batch_i == 0:
-                        print('So far: ', output, ' the state[:3] is: ', state[:3])
+                    # if batch_i == 0:
+                    #     print('So far: ', output, ' the state[:3] is: ', state[:3])
 
                     logits = self.eval_net(state)
                     batch_size_aux =  len(logits)
@@ -912,18 +937,18 @@ class QManager(object):
 
                 if batch_i == 0:
                     self.logger.info("Currently on the prediction.")
-                    r = self.Reward(batch.trg_input, hyp , show = True)
+                    r = self.Reward_batch(batch.trg_input, hyp , show = True)
                     print ("Function dev_network")
 
                 else:
-                    r = self.Reward(batch.trg_input, hyp , show = False)
+                    r = self.Reward_batch(batch.trg_input, hyp , show = False)
 
                 r_total += np.sum(r)
 
                 if self.dev_network_count == 0:
                     extra_col = self.eos_index *torch.ones(len(batch.trg_input) , dtype=int).view(len(batch.trg_input),-1) 
-                    trg_extra_col = torch.cat([batch.trg_input,extra_col ], dim= 1)
-                    roptimal = self.Reward(batch.trg_input, trg_extra_col , show = False)
+                    trg_extra_col = torch.cat([batch.trg_input,extra_col ], dim= 1).detach()
+                    roptimal = self.Reward_batch(batch.trg_input, trg_extra_col , show = False)
                     #print('roptimal: ', roptimal)
                     roptimal_total += np.sum(roptimal)
                     #print('roptimal_total: ', roptimal_total)
