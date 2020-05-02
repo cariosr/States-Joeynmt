@@ -38,8 +38,8 @@ training:
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
-    model_dir: "mini_reverse_2000_200_200_5_5_model"
-    # model_dir: "/content/gdrive/My Drive/models/batch_V0"
+    #model_dir: "mini_reverse_2000_200_200_5_5_model"
+    model_dir: "/content/gdrive/My Drive/models/mini_reverse_2000_200_200_5_5_model"
     overwrite: True
     shuffle: True
     use_cuda: False
