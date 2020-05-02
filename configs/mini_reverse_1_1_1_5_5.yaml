@@ -37,8 +37,8 @@ training:
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
-    model_dir: "mini_reverse_1_1_1_5_5_model"
-    # model_dir: "/content/gdrive/My Drive/models/batch_V0"
+    #model_dir: "mini_reverse_1_1_1_5_5_model"
+    model_dir: "/content/gdrive/My Drive/models/mini_reverse_1_1_1_5_5_model"
     overwrite: True
     shuffle: True
     use_cuda: False
@@ -74,6 +74,15 @@ model:
         input_feeding: True
         init_hidden: "bridge"
         attention: "luong"
+
+# test_variable: 'lr'
+# test_range: [0.001, 0.0001, 0.00001]
+# other_descrip: 'lr_var'
+
+# test_variable: 'gamma'
+# test_range: [0.8, 0.9, 0.99]
+# other_descrip: 'gamma_var'
+
 dqn:
     epochs: 1000
     sample_size: 256
@@ -96,6 +105,3 @@ dqn:
     #test_variable: 'gamma'
     #test_range: [0.8, 0.9, 0.99]
     #other_descrip: 'gamma_var'
-    #test_variable: 'batch_size'
-    #test_range: [32, 128, 512]
-    #other_descrip: 'batch_size_var'
