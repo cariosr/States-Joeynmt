@@ -202,9 +202,9 @@ class QManager(object):
         # print("State size: ", self.state_size)
         # print("Action size: ", self.actions_size)
 
-        epoch_batch_size_ratio = int(self.batch_size/32)
+        epoch_batch_size_ratio = self.batch_size/32
 
-        self.epochs = cfg["dqn"]["epochs"]*epoch_batch_size_ratio
+        self.epochs = int(cfg["dqn"]["epochs"]*epoch_batch_size_ratio)
         # Inii the Qnet and Qnet2
         self.eval_net = Net(self.state_size, self.actions_size, self.N_layers)
         self.target_net = Net(self.state_size, self.actions_size, self.N_layers)
@@ -247,7 +247,7 @@ class QManager(object):
             self.loss_func.cuda()
 
         if self.reward_type == "bleu_batch":
-            print("You select the reward based on the bleu_batch ")
+            print("You select the reward based on the bleu_batch fin")
         elif self.reward_type == "hc_batch":
             print("You select the reward based on the Hand Crafted Reward ")
 
@@ -274,9 +274,12 @@ class QManager(object):
 
         path_logger = self.model_dir + "/logs/" + date + "/" + relevant_hyp + ".log"
         self.logger = make_logger(path_logger) 
+
         self.dev_network_count = 0
         self.r_optimal_total = 0
         log_cfg(cfg, self.logger)
+        self.logger.info("The number of epoch proportional to the batch size is %d", self.epochs)
+        
         self.index_mem = 0
         self.logger.info("We are using the reward named: %s", self.reward_type)
         #Reward funtion related:
@@ -758,10 +761,10 @@ class QManager(object):
             assert len(valid_hypotheses) == len(valid_references)
 
 
-            if self.reward_type == "bleu_batch":
+            if self.reward_type == "bleu_batch" or self.reward_type == "bleu_fin":
                 blue_batch_score = bleu(valid_hypotheses, valid_references)
                 rew_distributed[i, -1] =  blue_batch_score
-            elif self.reward_type == "hc_batch":
+            else:  #if self.reward_type == "hc_batch":
                 rew_temp = self.Reward_hc(trg_i, hyp_i)
                 # print("rew_i = ", rew_temp)
                 rew_distributed[i] =  rew_temp
