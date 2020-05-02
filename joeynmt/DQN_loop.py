@@ -201,7 +201,10 @@ class QManager(object):
         # print("Sample size: ", self.sample_size )
         # print("State size: ", self.state_size)
         # print("Action size: ", self.actions_size)
-        self.epochs = cfg["dqn"]["epochs"]
+
+        epoch_batch_size_ratio = int(self.batch_size/32)
+
+        self.epochs = cfg["dqn"]["epochs"]*epoch_batch_size_ratio
         # Inii the Qnet and Qnet2
         self.eval_net = Net(self.state_size, self.actions_size, self.N_layers)
         self.target_net = Net(self.state_size, self.actions_size, self.N_layers)

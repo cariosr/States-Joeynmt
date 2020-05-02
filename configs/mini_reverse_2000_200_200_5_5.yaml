@@ -86,17 +86,11 @@ dqn:
     mem_cap: 5000
     beam_min: 1
     beam_max: 50
-    state_type: 'attention'
-    reward_type: 'bleu_seq'
+    state_type: 'hidden'
+    reward_type: 'bleu_batch'
     nu_pretrain: 0
     N_layers: 4
-    batch_size: 10
-    test_variable: 'lr'
-    test_range: [0.001, 0.0001, 0.00001]
-    other_descrip: 'lr_var'
-    # test_variable: 'gamma'
-    # test_range: [0.8, 0.9, 0.99]
-    # other_descrip: 'gamma_var'
-    # test_variable: 'batch_size'
-    # test_range: [32, 128, 512]
-    # other_descrip: 'batch_size_var'
+    batch_size: 512
+    test_variable: 'batch_size'
+    test_range: []
+    other_descrip: 'batch_size_var'
