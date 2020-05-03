@@ -38,8 +38,8 @@ training:
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
-    #model_dir: "mini_reverse_2000_200_200_5_5_model"
-    model_dir: "/content/gdrive/My Drive/models/mini_reverse_2000_200_200_5_5_model"
+    model_dir: "mini_reverse_2000_200_200_5_5_model"
+    #model_dir: "/content/gdrive/My Drive/models/mini_reverse_2000_200_200_5_5_model"
     overwrite: True
     shuffle: True
     use_cuda: False
@@ -59,7 +59,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 24
+        hidden_size: 48
         bidirectional: True
         dropout: 0.1
         num_layers: 1
@@ -68,7 +68,7 @@ model:
         embeddings:
             embedding_dim: 16
             scale: False
-        hidden_size: 24
+        hidden_size: 48
         dropout: 0.1
         hidden_dropout: 0.1
         num_layers: 1

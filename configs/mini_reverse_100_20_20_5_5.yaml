@@ -22,9 +22,9 @@ testing:
     alpha: 1.0
 
 training:
-    random_seed: 42
+    random_seed: 60
     optimizer: "adam"
-    learning_rate: 0.001
+    learning_rate: 0.01
     learning_rate_min: 0.00002
     weight_decay: 0.0
     clip_grad_norm: 1.0
@@ -34,12 +34,12 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 100
+    epochs: 50
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
-    #model_dir: "mini_reverse_100_20_20_5_5_model"
-    model_dir: "/content/gdrive/My Drive/models/batch_V0"
+    model_dir: "mini_reverse_100_20_20_5_5_model"
+    #model_dir: "/content/gdrive/My Drive/models/batch_V0"
     overwrite: True
     shuffle: True
     use_cuda: False
