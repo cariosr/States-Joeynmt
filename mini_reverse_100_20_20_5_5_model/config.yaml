@@ -34,12 +34,11 @@ training:
     patience: 5
     decrease_factor: 0.5
     early_stopping_metric: "eval_metric"
-    epochs: 100
+    epochs: 50
     validation_freq: 10
     logging_freq: 10
     eval_metric: "bleu"
     model_dir: "mini_reverse_100_20_20_5_5_model"
-    #model_dir: "/content/gdrive/My Drive/models/batch_V0"
     overwrite: True
     shuffle: True
     use_cuda: False
@@ -91,4 +90,7 @@ dqn:
     nu_pretrain: 0
     N_layers: 4
     batch_size: 32
-    other_descrip: '_with_best_parameters'
+    non_stop: False
+    test_variable: 'lr'
+    test_range: [0.001, 0.0001, 0.00001]
+    other_descrip: 'lr_var'
